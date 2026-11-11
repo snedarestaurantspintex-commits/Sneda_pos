@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title id="doc-title">Sneda Kitchen POS</title>
   
-  <!-- Firebase SDKs -->
+  <!-- Firebase Realtime Database SDKs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -28,7 +28,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-family); }
     body { background: var(--bg); color: var(--text); padding-bottom: 95px; }
 
-    /* Gateway Screen */
+    /* Gateway Login Screen */
     #role-selector-screen {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -40,52 +40,87 @@
       align-items: center;
       padding: 20px;
     }
+    .gateway-top-bar {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+    }
+    .btn-three-dots {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 1.4rem;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .btn-three-dots:hover {
+      background: var(--card);
+      border-color: var(--primary);
+    }
     .role-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
       width: 100%;
-      max-width: 420px;
+      max-width: 520px;
       margin-top: 24px;
     }
     .role-card {
       background: var(--surface);
       border: 2px solid var(--border);
-      border-radius: 12px;
-      padding: 24px 16px;
+      border-radius: 14px;
+      padding: 24px 12px;
       text-align: center;
       cursor: pointer;
       transition: all 0.2s;
     }
     .role-card:active { transform: scale(0.97); }
-    .role-card h3 { font-size: 1.2rem; margin-top: 8px; }
-    .role-card p { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
-    .role-card.manager { border-color: #ef4444; }
+    .role-card h3 { font-size: 1.1rem; margin-top: 8px; }
+    .role-card p { font-size: 0.72rem; color: var(--text-dim); margin-top: 4px; }
     .role-card.cashier { border-color: #10b981; }
     .role-card.kitchen { border-color: #f59e0b; }
     .role-card.waiter { border-color: var(--primary); }
 
-    /* Password Modal */
-    #login-overlay {
+    /* Universal Modal Background */
+    .modal-backdrop {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.95);
-      z-index: 1100;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(4px);
+      z-index: 1200;
       display: none;
       justify-content: center;
       align-items: center;
       padding: 20px;
     }
-    .login-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
+    .modal-box {
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 16px;
       padding: 24px;
-      border-radius: 12px;
       width: 100%;
-      max-width: 320px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      max-width: 380px;
+      box-shadow: 0 20px 35px rgba(0,0,0,0.6);
+      animation: popIn 0.2s ease-out;
     }
-    .login-card h3 { margin-bottom: 14px; text-align: center; }
+    @keyframes popIn {
+      from { transform: scale(0.94); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-box h3 {
+      text-align: center;
+      margin-bottom: 16px;
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #38bdf8;
+    }
+
     .login-input {
       width: 100%;
       background: var(--card);
@@ -108,7 +143,46 @@
       cursor: pointer;
     }
 
-    /* Header */
+    /* Slot Picker Grid inside Popup */
+    .popup-slot-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      max-height: 320px;
+      overflow-y: auto;
+      margin-bottom: 16px;
+      padding: 4px;
+    }
+    .popup-slot-btn {
+      background: #334155;
+      border: 1px solid #475569;
+      color: #f8fafc;
+      padding: 12px 0;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.15s;
+    }
+    .popup-slot-btn:active { transform: scale(0.92); }
+    .popup-slot-btn.active {
+      background: var(--primary);
+      border-color: #93c5fd;
+    }
+    .popup-slot-btn.occupied::after {
+      content: '';
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--danger);
+    }
+
+    /* Top App Header */
     header {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
@@ -131,203 +205,285 @@
       cursor: pointer;
     }
 
-    .main { max-width: 900px; margin: 0 auto; padding: 14px; }
-    .title { font-size: 0.85rem; text-transform: uppercase; color: var(--text-dim); margin: 12px 0 6px 0; font-weight: 700; }
+    .main { max-width: 580px; margin: 0 auto; padding: 14px; }
 
-    /* Slots */
-    .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 8px; margin-bottom: 12px; }
-    .slot-btn {
+    /* Wireframe Style: Welcome Box */
+    .welcome-card {
+      border: 2px solid var(--border);
       background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 10px 0;
-      border-radius: 8px;
-      text-align: center;
-      font-weight: 700;
-      cursor: pointer;
-      position: relative;
-      font-size: 0.9rem;
-    }
-    .slot-btn.active { background: var(--primary); border-color: var(--text); color: #fff; }
-    .slot-btn.occupied::after {
-      content: '';
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--danger);
-    }
-    .slot-btn.takeaway { border-left: 4px solid var(--takeaway); }
-    .slot-btn.bolt { border-left: 4px solid var(--bolt); }
-
-    /* Out of Menu Card */
-    .out-of-menu-card {
-      background: var(--surface);
-      border: 2px dashed #f59e0b;
-      border-radius: 10px;
-      padding: 12px 14px;
+      border-radius: 12px;
+      padding: 14px 16px;
       margin-bottom: 14px;
     }
-    .out-of-menu-header {
+    .welcome-title { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+    .welcome-date { font-size: 0.95rem; font-weight: 600; color: var(--text-dim); margin-top: 4px; }
+
+    /* Big Order Selector Boxes */
+    .order-type-grid {
+      display: grid;
+      grid-template-columns: 2fr 2fr 1.2fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .type-btn {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 8px;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .type-btn:active { transform: scale(0.97); }
+    .type-btn.active {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Selected Slot Headline */
+    .for-slot-headline {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text);
+      margin: 10px 0 10px 0;
+    }
+
+    /* Search & Question-Mark Bar */
+    .search-flex-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .search-input-wire {
+      flex: 1;
+      background: var(--surface);
+      border: 2px solid #3b82f6;
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+    }
+    .btn-question-mark {
+      width: 48px;
+      height: 48px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 1.3rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Auto Search Match Dropdown List */
+    .search-dropdown-list {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 14px;
+      max-height: 250px;
+      overflow-y: auto;
+      display: none;
+    }
+    .search-res-item {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .search-res-item:last-child { border-bottom: none; }
+    .search-res-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .note-inline-input {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: #38bdf8;
+      font-size: 0.8rem;
+      padding: 6px 10px;
+      border-radius: 6px;
+      outline: none;
+    }
+
+    /* "For this total order is:" Section */
+    .order-basket-section { margin-top: 14px; }
+    .basket-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    .basket-item-row {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: 10px;
+      padding: 10px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 8px;
     }
-    .out-of-menu-header span {
-      font-size: 0.85rem;
-      font-weight: 800;
-      color: #fbbf24;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .out-of-menu-form {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    /* Search & Menu */
-    .search-input {
-      width: 100%;
-      background: var(--surface);
-      border: 2px solid var(--primary);
-      color: var(--text);
-      padding: 12px 14px;
-      border-radius: 8px;
+    .basket-item-name {
       font-size: 1rem;
-      outline: none;
-      margin-bottom: 12px;
-    }
-    .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
-    .item-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .item-card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .item-name { font-weight: 600; font-size: 0.95rem; }
-    .item-tag { font-size: 0.7rem; padding: 2px 5px; border-radius: 4px; margin-left: 6px; }
-    .tag-kitchen { background: #854d0e; color: #fef08a; }
-    .tag-direct { background: var(--card); color: var(--text-dim); }
-    .qty-box { display: flex; align-items: center; gap: 6px; }
-    .btn-qty {
-      width: 32px;
-      height: 32px;
-      background: var(--card);
-      border: 1px solid var(--border);
+      font-weight: 700;
       color: var(--text);
-      border-radius: 6px;
+    }
+    .basket-item-qty {
       font-size: 1.1rem;
-      font-weight: bold;
+      font-weight: 800;
+      color: var(--text);
+      margin: 0 16px;
+    }
+    .btn-delete-cross {
+      color: var(--danger);
+      background: transparent;
+      border: none;
+      font-size: 1.3rem;
+      font-weight: 900;
       cursor: pointer;
+      padding: 0 4px;
     }
-    .qty-val { min-width: 20px; text-align: center; font-weight: 700; }
 
-    .item-note-row {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      margin-top: 2px;
-    }
-    .input-item-note {
-      flex: 1;
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: #38bdf8;
-      font-size: 0.8rem;
-      padding: 5px 8px;
-      border-radius: 4px;
-      outline: none;
-    }
-    .input-item-note::placeholder { color: var(--text-dim); font-size: 0.75rem; }
-
-    /* Bottom Bar */
-    .bottom-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      padding: 10px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 99;
-    }
-    .btn-send {
+    /* Big Bottom Button */
+    .btn-transfer {
+      width: 100%;
       background: var(--success);
       color: white;
       border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: 700;
+      padding: 15px;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 800;
       cursor: pointer;
+      margin-top: 14px;
+      box-shadow: 0 4px 14px rgba(22, 163, 74, 0.4);
     }
 
-    /* Kitchen Tickets */
-    .k-tickets { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-    .k-card {
+    /* Active Orders On Table Box */
+    .active-placed-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-top: 5px solid var(--warning);
-      border-radius: 8px;
-      padding: 12px;
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 18px;
+      display: none;
     }
-    .k-head { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 8px; }
-    .k-waiter { color: #f59e0b; font-size: 0.8rem; font-weight: 600; }
-    .k-items { list-style: none; margin-bottom: 10px; }
-    .k-items li { display: flex; flex-direction: column; padding: 6px 0; border-bottom: 1px dashed var(--border); }
-    .k-item-line { display: flex; justify-content: space-between; font-size: 1rem; }
+    .active-placed-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    /* --- CONSOLIDATED KITCHEN TICKETS --- */
+    .k-tickets {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+      margin-top: 10px;
+    }
+    .k-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-top: 6px solid var(--warning);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+    }
+    .k-card.takeaway { border-top-color: var(--takeaway); }
+    .k-card.bolt { border-top-color: var(--bolt); }
+
+    .k-headline-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .k-order-badge {
+      font-size: 1.35rem;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      color: #38bdf8;
+    }
+    .k-timer-badge {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+      font-weight: 900;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 1rem;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+    .k-meta-row {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .k-items-list {
+      list-style: none;
+      margin-bottom: 16px;
+    }
+    .k-items-list li {
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+    .k-item-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    .k-item-qty {
+      font-size: 1.25rem;
+      color: #38bdf8;
+      font-weight: 900;
+      margin-left: 8px;
+    }
     .k-item-note {
       background: rgba(245, 158, 11, 0.15);
       border-left: 3px solid #f59e0b;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-size: 0.8rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.85rem;
       color: #fbbf24;
-      font-weight: 600;
+      font-weight: 700;
       margin-top: 4px;
       display: inline-block;
     }
-    .btn-done { width: 100%; background: #0284c7; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: 700; cursor: pointer; }
-
-    /* Cashier Detail & Table Order Manager */
-    .cashier-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      margin-top: 14px;
-      display: none;
+    .k-batch-tag {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      margin-top: 2px;
     }
-    .c-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .btn-clear { background: var(--danger); color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 700; cursor: pointer; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 8px 0; border-bottom: 1px solid var(--border); text-align: left; }
-    th:last-child, td:last-child { text-align: right; }
 
-    .btn-cancel-item {
-      background: #7f1d1d;
-      color: #fca5a5;
-      border: 1px solid #dc2626;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
+    .btn-done {
+      width: 100%;
+      background: #0284c7;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 1rem;
       cursor: pointer;
-      font-weight: 600;
     }
 
     /* Manager Management Sections */
@@ -339,10 +495,9 @@
       margin-bottom: 18px;
     }
     .manager-form { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-    .manager-input { flex: 1; min-width: 140px; background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: 6px; outline: none; }
+    .manager-input { flex: 1; min-width: 130px; background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: 6px; outline: none; }
     .btn-add { background: var(--success); color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; }
-    .manager-item { background: var(--card); border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .staff-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+    .staff-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 0.85rem; }
     .staff-table th, .staff-table td { padding: 8px; border: 1px solid var(--border); text-align: center; }
 
     .color-picker-box {
@@ -371,41 +526,39 @@
 </head>
 <body>
 
-  <!-- STEP 1: ROLE SELECTOR -->
+  <!-- STEP 1: INITIAL ROLE SELECTION GATEWAY -->
   <div id="role-selector-screen">
+    <div class="gateway-top-bar">
+      <button class="btn-three-dots" onclick="promptRoleLogin('MANAGER')" title="Manager Settings">⋮</button>
+    </div>
+
     <h2 id="gateway-app-name" style="color: var(--primary); font-weight: 800;">Sneda Kitchen POS</h2>
     <p style="color: var(--text-dim); margin-top: 4px;">Select role to continue:</p>
     
     <div class="role-grid">
-      <div class="role-card manager" onclick="promptRoleLogin('MANAGER')">
-        <div style="font-size: 2rem;">👑</div>
-        <h3>Manager</h3>
-        <p>Reports, Theme & Full Control</p>
-      </div>
-
       <div class="role-card cashier" onclick="promptRoleLogin('CASHIER')">
-        <div style="font-size: 2rem;">💳</div>
+        <div style="font-size: 2.2rem;">💳</div>
         <h3>Cashier</h3>
-        <p>Billing & Modification</p>
+        <p>Billing & Counter</p>
       </div>
 
       <div class="role-card kitchen" onclick="promptRoleLogin('KITCHEN')">
-        <div style="font-size: 2rem;">🍳</div>
+        <div style="font-size: 2.2rem;">🍳</div>
         <h3>Kitchen</h3>
-        <p>Cooking Display with Notes</p>
+        <p>Live Orders & Timer</p>
       </div>
 
       <div class="role-card waiter" onclick="promptRoleLogin('WAITER')">
-        <div style="font-size: 2rem;">🤵</div>
+        <div style="font-size: 2.2rem;">🤵</div>
         <h3>Waiter</h3>
-        <p>Orders & Custom Notes</p>
+        <p>Take & Transfer</p>
       </div>
     </div>
   </div>
 
-  <!-- STEP 2: PASSWORD MODAL -->
-  <div id="login-overlay">
-    <div class="login-card">
+  <!-- PASSWORD MODAL -->
+  <div id="login-overlay" class="modal-backdrop">
+    <div class="modal-box">
       <h3 id="modal-role-title">Login</h3>
       <div id="user-id-field" style="display: none;">
         <input type="text" id="modal-user-id" class="login-input" placeholder="Staff ID (e.g. 101 or C1)">
@@ -416,7 +569,37 @@
     </div>
   </div>
 
-  <!-- APPLICATION HEADER -->
+  <!-- NUMBER SELECTION POPUP MODAL (TABLE / TAKEAWAY / BOLT) -->
+  <div id="slot-picker-modal" class="modal-backdrop">
+    <div class="modal-box">
+      <h3 id="slot-picker-title">Select Table Number</h3>
+      <div class="popup-slot-grid" id="popup-slot-grid-container"></div>
+      <button style="width: 100%; background: #334155; border: 1px solid #475569; color: var(--text); padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer;" onclick="closeSlotPickerModal()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- QUESTION-MARK CUSTOM ITEM MODAL -->
+  <div id="question-modal" class="modal-backdrop">
+    <div class="modal-box">
+      <h3>Add Custom Item (?)</h3>
+      <label style="font-size: 0.75rem; color: var(--text-dim);">1. Food / Item Name:</label>
+      <input type="text" id="qm-item-name" class="login-input" placeholder="e.g. Special Khichuri, Staff Meal">
+      
+      <label style="font-size: 0.75rem; color: var(--text-dim);">2. Routing Category:</label>
+      <select id="qm-item-kitchen" class="login-input" style="height: 44px;">
+        <option value="true">🍳 Kitchen Category (Cooked)</option>
+        <option value="false">🥤 Non-Kitchen (Drinks / Outside)</option>
+      </select>
+
+      <label style="font-size: 0.75rem; color: var(--text-dim);">3. Quantity (Pieces):</label>
+      <input type="number" id="qm-item-qty" class="login-input" value="1" min="1" max="50">
+
+      <button class="btn-submit" onclick="saveQuestionModalItem()">Add to Order</button>
+      <button style="width: 100%; background: transparent; border: none; color: var(--text-dim); margin-top: 10px; cursor: pointer;" onclick="closeQuestionModal()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- APP TOP HEADER -->
   <header>
     <div>
       <span class="logo" id="header-brand-name">Sneda Kitchen POS</span>
@@ -427,165 +610,112 @@
 
   <div class="main">
 
-    <!-- WAITER VIEW -->
-    <div id="view-waiter" class="view-section">
-      <div class="title">Dine-In Tables</div>
-      <div class="slot-grid" id="waiter-grid-dinein"></div>
-
-      <div class="title">Take Away</div>
-      <div class="slot-grid" id="waiter-grid-takeaway"></div>
-
-      <div class="title">Bolt Orders</div>
-      <div class="slot-grid" id="waiter-grid-bolt"></div>
-
-      <!-- Modify/Cancel active order on table directly -->
-      <div class="cashier-box" id="waiter-table-active-box" style="margin-bottom: 16px;">
-        <div class="c-head">
-          <h3 id="waiter-active-slot-title">Active Items on Table</h3>
-          <small style="color:var(--text-dim);">Tap 'Cancel' if guest modifies order</small>
-        </div>
-        <table>
-          <thead>
-            <tr style="color: var(--text-dim); font-size: 0.85rem;">
-              <th>Item & Instruction</th>
-              <th>Qty</th>
-              <th>Staff</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="waiter-active-table-rows"></tbody>
-        </table>
+    <!-- WAITER & CASHIER WIREFRAME VIEW -->
+    <div id="view-order-portal" class="view-section">
+      
+      <!-- Welcome Header Card -->
+      <div class="welcome-card">
+        <div class="welcome-title" id="portal-welcome-name">Welcome, Mr. XXXXX, (waiter)</div>
+        <div class="welcome-date" id="portal-live-date">Today Date is 11 November, 2026</div>
       </div>
 
-      <!-- OUT OF MENU SPECIAL SECTION -->
-      <div class="out-of-menu-card">
-        <div class="out-of-menu-header">
-          <span>⭐ Out of Menu (Custom Order / Staff Request)</span>
-          <small style="color: var(--text-dim);">Type any custom item not on the menu</small>
-        </div>
-        <div class="out-of-menu-form">
-          <input type="text" id="custom-item-name" class="manager-input" placeholder="Item Name (e.g. Special Khichuri, Staff Meal)..." style="flex:2;">
-          <input type="text" id="custom-item-note" class="manager-input" placeholder="Instructions (e.g. Extra spicy, No salt)..." style="flex:2;">
-          <input type="number" id="custom-item-qty" class="manager-input" value="1" min="1" max="50" style="max-width: 70px;">
-          <select id="custom-item-kitchen" class="manager-input" style="max-width: 120px;">
-            <option value="true">🍳 Kitchen</option>
-            <option value="false">🥤 Outside</option>
-          </select>
-          <button class="btn-add" onclick="addCustomOutOfMenuItem()">Add Item</button>
-        </div>
+      <!-- 3 Order Type Buttons -->
+      <div class="order-type-grid">
+        <button class="type-btn active" id="btn-type-table" onclick="openSlotPopup('TABLE')">Table Order</button>
+        <button class="type-btn" id="btn-type-takeway" onclick="openSlotPopup('TAKEAWAY')">Take Way</button>
+        <button class="type-btn" id="btn-type-bolt" onclick="openSlotPopup('BOLT')">Bolt</button>
       </div>
 
-      <div class="title">Search Menu Items</div>
-      <input type="text" id="waiter-search" class="search-input" placeholder="🔍 Search food or drinks..." oninput="renderMenu()">
+      <!-- Dynamic Headline: For Table Number: X -->
+      <div class="for-slot-headline" id="headline-selected-slot">For Table Number: 1</div>
 
-      <div class="menu-grid" id="waiter-menu-list"></div>
-
-      <div class="bottom-bar">
-        <div>
-          <strong id="waiter-bar-slot">No Slot Selected</strong>
-          <div style="font-size: 0.8rem; color: var(--text-dim);" id="waiter-bar-count">0 items selected</div>
-        </div>
-        <button class="btn-send" onclick="submitOrder()">Send to Kitchen / Order</button>
+      <!-- 'I am looking For.....' Search Bar with [?] Button -->
+      <div class="search-flex-row">
+        <input type="text" id="portal-search-bar" class="search-input-wire" placeholder="I am looking For....." oninput="handleSearchType()">
+        <button class="btn-question-mark" onclick="openQuestionModal()" title="Add Custom Item">?</button>
       </div>
+
+      <!-- Search Autocomplete Dropdown List -->
+      <div class="search-dropdown-list" id="portal-search-results"></div>
+
+      <!-- "For this total order is:" Section -->
+      <div class="order-basket-section">
+        <div class="basket-title">For this total order is:</div>
+        <div id="basket-items-container">
+          <p style="color: var(--text-dim); font-size: 0.9rem;">No items added yet. Search food above to add.</p>
+        </div>
+
+        <button class="btn-transfer" onclick="transferToKitchen()">Transfer to Kitchen</button>
+      </div>
+
+      <!-- Live Placed Orders on this Table -->
+      <div class="active-placed-card" id="active-placed-order-card">
+        <div class="active-placed-title">
+          <strong id="active-slot-placed-headline">Active Kitchen Orders</strong>
+          <small style="color:#f59e0b;">(Cancellation requires reason)</small>
+        </div>
+        <div id="active-placed-items-list"></div>
+        <button id="btn-cashier-finalize" style="width: 100%; background: #0284c7; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; margin-top: 10px; display: none;" onclick="clearActiveSlotBill()">Finalize Bill & Paid</button>
+      </div>
+
     </div>
 
-    <!-- KITCHEN VIEW (Displays ONLY Kitchen Prepared Items + Notes) -->
+    <!-- KITCHEN VIEW (Consolidated Single Card per Table) -->
     <div id="view-kitchen" class="view-section">
-      <div class="title">Live Kitchen Cooking Orders (With Cooking Notes)</div>
+      <div class="title" style="margin-bottom:12px; font-weight:800; font-size:1rem;">🍳 Live Kitchen Display Orders</div>
       <div class="k-tickets" id="kitchen-ticket-list"></div>
     </div>
 
-    <!-- CASHIER VIEW -->
-    <div id="view-cashier" class="view-section">
-      <div class="title">All Active Tables & Orders</div>
-      
-      <div style="font-size:0.8rem; color:var(--text-dim); margin-top:6px;">Dine-In:</div>
-      <div class="slot-grid" id="cashier-grid-dinein"></div>
-
-      <div style="font-size:0.8rem; color:var(--text-dim);">Take Away:</div>
-      <div class="slot-grid" id="cashier-grid-takeaway"></div>
-
-      <div style="font-size:0.8rem; color:var(--text-dim);">Bolt:</div>
-      <div class="slot-grid" id="cashier-grid-bolt"></div>
-
-      <div class="cashier-box" id="cashier-details-box">
-        <div class="c-head">
-          <div>
-            <h3 id="cashier-slot-title">Order Details</h3>
-            <small style="color: var(--text-dim);">Includes Kitchen food + Drinks + Special Notes</small>
-          </div>
-          <button class="btn-clear" onclick="clearActiveSlot()">Clear / Paid & Finish</button>
-        </div>
-        <table>
-          <thead>
-            <tr style="color: var(--text-dim);">
-              <th>Item Name & Note</th>
-              <th>Staff</th>
-              <th>Time</th>
-              <th>Qty</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="cashier-table-rows"></tbody>
-        </table>
-      </div>
-
-      <!-- Out of Menu for Cashier -->
-      <div class="out-of-menu-card" style="margin-top: 18px;">
-        <div class="out-of-menu-header">
-          <span>⭐ Out of Menu (Custom Order)</span>
-        </div>
-        <div class="out-of-menu-form">
-          <input type="text" id="cashier-custom-name" class="manager-input" placeholder="Item Name..." style="flex:2;">
-          <input type="text" id="cashier-custom-note" class="manager-input" placeholder="Instruction (e.g. Less spicy)..." style="flex:2;">
-          <input type="number" id="cashier-custom-qty" class="manager-input" value="1" min="1" max="50" style="max-width: 70px;">
-          <button class="btn-add" onclick="addCustomOutOfMenuItem(true)">Add Item</button>
-        </div>
-      </div>
-
-      <div class="title" style="margin-top: 16px;">Add More Items to Selected Slot</div>
-      <input type="text" id="cashier-search" class="search-input" placeholder="🔍 Search food or drink to add..." oninput="renderMenu()">
-      <div class="menu-grid" id="cashier-menu-list"></div>
-
-      <div class="bottom-bar">
-        <div>
-          <strong id="cashier-bar-slot">Select Slot Above</strong>
-          <div style="font-size: 0.8rem; color: var(--text-dim);" id="cashier-bar-count">0 items selected</div>
-        </div>
-        <button class="btn-send" onclick="submitOrder()">Add to Order</button>
-      </div>
-    </div>
-
-    <!-- MANAGER VIEW -->
+    <!-- MANAGER VIEW (Full Customization & Analytics) -->
     <div id="view-manager" class="view-section">
 
-      <!-- Today's Total Sales / Quantity Consumption Report -->
+      <!-- Waiter/Staff Order Performance Leaderboard -->
       <div class="manager-card-section">
-        <div class="title">📊 Today's Total Consumed Items (Day History)</div>
-        <table class="staff-table" style="margin-top: 8px;">
+        <div class="title" style="margin-bottom:8px; font-weight:800;">🏆 Staff Order Performance (Daily Leaderboard)</div>
+        <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:8px;">Who punched the highest number of orders today:</p>
+        <table class="staff-table">
           <thead>
-            <tr style="background:var(--card); font-size:0.85rem;">
-              <th>Item Name</th>
-              <th>Type</th>
-              <th>Total Pieces Sold / Served</th>
+            <tr style="background:var(--card);">
+              <th>Rank</th>
+              <th>Staff Member</th>
+              <th>Role</th>
+              <th>Total Orders Punched</th>
             </tr>
           </thead>
-          <tbody id="manager-daily-sales-tbody"></tbody>
+          <tbody id="manager-leaderboard-tbody"></tbody>
         </table>
       </div>
 
-      <!-- Audit / Cancellation Log -->
+      <!-- Today's Total Sales & Cooking Duration History -->
       <div class="manager-card-section">
-        <div class="title">🚨 Order Cancellation & Modification Log (Audit Trail)</div>
-        <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:8px;">Who cancelled what, at what time, from which table:</p>
+        <div class="title" style="margin-bottom:8px; font-weight:800;">📊 Full Completed Orders History (Date, Time & Duration)</div>
         <table class="staff-table">
           <thead>
-            <tr style="background:rgba(239, 68, 68, 0.15); font-size:0.85rem;">
+            <tr style="background:var(--card);">
+              <th>Date</th>
               <th>Time</th>
-              <th>Table / Slot</th>
+              <th>Table/Slot</th>
+              <th>Items & Qty</th>
+              <th>Cooked Time (Duration)</th>
+              <th>Staff</th>
+            </tr>
+          </thead>
+          <tbody id="manager-history-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Order Cancellation & Modification Log (Audit Trail) -->
+      <div class="manager-card-section">
+        <div class="title" style="margin-bottom:8px; font-weight:800;">🚨 Order Cancellation & Modification Log (Audit Trail)</div>
+        <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:8px;">Who cancelled what, at what time, from which table, and why:</p>
+        <table class="staff-table">
+          <thead>
+            <tr style="background:rgba(239, 68, 68, 0.15);">
+              <th>Date & Time</th>
+              <th>Table/Slot</th>
               <th>Item Cancelled</th>
               <th>Qty</th>
-              <th>Cancelled By (Staff)</th>
+              <th>Cancelled By</th>
               <th>Reason</th>
             </tr>
           </thead>
@@ -593,13 +723,12 @@
         </table>
       </div>
 
-      <!-- Full Palette Theme & Branding Settings -->
+      <!-- Full Palette Theme, Colors & Typography Customizer -->
       <div class="manager-card-section">
-        <div class="title">🎨 Full Theme, Colors & Typography Customizer</div>
-        
+        <div class="title" style="margin-bottom:8px; font-weight:800;">🎨 Full Theme, Colors & Typography Customizer</div>
         <div class="manager-form">
           <div style="flex: 2; min-width: 180px;">
-            <label style="font-size: 0.75rem; color: var(--text-dim);">Restaurant / System Name:</label>
+            <label style="font-size: 0.75rem; color: var(--text-dim);">Restaurant Name:</label>
             <input type="text" id="mgr-set-appname" class="manager-input" style="width: 100%;">
           </div>
           <div style="flex: 1.5; min-width: 160px;">
@@ -615,18 +744,18 @@
           </div>
         </div>
 
-        <div class="title" style="margin-top: 10px;">Color Customization (Background, Cards, Text, Borders)</div>
+        <div class="title" style="margin-top: 10px; font-size:0.8rem;">Color Customization (Background, Surface, Border, Text, Accent)</div>
         <div class="manager-form" style="margin-top: 6px;">
           <div class="color-picker-box">
-            <label>Page Background:</label>
+            <label>Background:</label>
             <input type="color" id="mgr-color-bg">
           </div>
           <div class="color-picker-box">
-            <label>Card / Surface:</label>
+            <label>Surface/Card:</label>
             <input type="color" id="mgr-color-surface">
           </div>
           <div class="color-picker-box">
-            <label>Border Color:</label>
+            <label>Border:</label>
             <input type="color" id="mgr-color-border">
           </div>
           <div class="color-picker-box">
@@ -640,39 +769,20 @@
         </div>
 
         <div style="margin-top: 12px; display: flex; gap: 8px;">
-          <button class="btn-add" onclick="saveCustomBranding()">Save Colors & Theme</button>
-          <button onclick="resetDefaultColors()" style="background:var(--card); color:var(--text); border:1px solid var(--border); padding:10px 16px; border-radius:6px; cursor:pointer; font-weight:600;">Reset Defaults</button>
+          <button class="btn-add" onclick="saveCustomBrandingTheme()">Save Colors & Theme</button>
+          <button onclick="resetDefaultThemeColors()" style="background:var(--card); color:var(--text); border:1px solid var(--border); padding:10px 16px; border-radius:6px; cursor:pointer; font-weight:600;">Reset Defaults</button>
         </div>
       </div>
 
-      <!-- Capacity & Table Settings -->
+      <!-- Staff Accounts & Passwords (With Miss / Mr. Selection) -->
       <div class="manager-card-section">
-        <div class="title">🪑 Table & Slot Quantities</div>
-        <div class="manager-form">
-          <div style="flex: 1;">
-            <label style="font-size: 0.75rem; color: var(--text-dim);">Dine-In Tables:</label>
-            <input type="number" id="mgr-set-dinein" class="manager-input" min="1" max="100" style="width: 100%;">
-          </div>
-          <div style="flex: 1;">
-            <label style="font-size: 0.75rem; color: var(--text-dim);">Take Away Slots:</label>
-            <input type="number" id="mgr-set-takeaway" class="manager-input" min="1" max="50" style="width: 100%;">
-          </div>
-          <div style="flex: 1;">
-            <label style="font-size: 0.75rem; color: var(--text-dim);">Bolt Order Slots:</label>
-            <input type="number" id="mgr-set-bolt" class="manager-input" min="1" max="50" style="width: 100%;">
-          </div>
-        </div>
-        <button class="btn-add" onclick="saveSlotCounts()">Update Quantities</button>
-      </div>
-
-      <!-- Staff Accounts & Passwords -->
-      <div class="manager-card-section">
-        <div class="title">👥 System Roles & Cashier / Waiter Accounts</div>
+        <div class="title" style="margin-bottom:8px; font-weight:800;">👥 Staff Accounts & Passwords</div>
         <table class="staff-table">
           <thead>
-            <tr style="background:var(--card); font-size:0.85rem;">
+            <tr style="background:var(--card);">
               <th>Type / ID</th>
-              <th>Name</th>
+              <th>Name & Title</th>
+              <th>Gender</th>
               <th>Password</th>
               <th>Action</th>
             </tr>
@@ -680,11 +790,15 @@
           <tbody id="manager-staff-tbody"></tbody>
         </table>
 
-        <div class="title" style="margin-top: 14px;">Add New Cashier or Waiter</div>
+        <div class="title" style="margin-top: 14px; font-size:0.8rem;">Add New Staff Member (Mr. / Miss)</div>
         <div class="manager-form">
-          <select id="mgr-new-role" class="manager-input" style="max-width: 120px;">
+          <select id="mgr-new-role" class="manager-input" style="max-width: 110px;">
             <option value="WAITER">Waiter</option>
             <option value="CASHIER">Cashier</option>
+          </select>
+          <select id="mgr-new-gender" class="manager-input" style="max-width: 140px;">
+            <option value="M">Male (Mr.)</option>
+            <option value="F">Female (Miss)</option>
           </select>
           <input type="text" id="mgr-new-id" class="manager-input" placeholder="ID (e.g. 104 or C2)">
           <input type="text" id="mgr-new-name" class="manager-input" placeholder="Staff Name">
@@ -693,14 +807,14 @@
         </div>
       </div>
 
-      <!-- Menu Items Management (Kitchen vs Direct) -->
+      <!-- Menu Items Management -->
       <div class="manager-card-section">
-        <div class="title">🍲 Menu Items & Kitchen Routing (<span id="mgr-total-items">0</span>)</div>
+        <div class="title" style="margin-bottom:8px; font-weight:800;">🍲 Menu Items Management (<span id="mgr-total-items">0</span>)</div>
         <div class="manager-form">
           <input type="text" id="mgr-new-item" class="manager-input" placeholder="New food or beverage name...">
           <select id="mgr-new-item-type" class="manager-input" style="max-width: 180px;">
-            <option value="true">🍳 Cooked in Kitchen</option>
-            <option value="false">🥤 Drinks / Outside Item</option>
+            <option value="true">🍳 Kitchen Cooked</option>
+            <option value="false">🥤 Direct / Drinks</option>
           </select>
           <button class="btn-add" onclick="managerAddNewMenuItem()">Add Item</button>
         </div>
@@ -719,7 +833,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 1. Initial Configurations & Defaults
+    // Default Configurations & Staff Structure with 'Miss'
     const defaultSettings = {
       appName: "Sneda Kitchen POS",
       accentColor: "#2563eb",
@@ -739,13 +853,13 @@
     };
 
     const initialCashiers = [
-      { id: "C1", name: "Main Cashier Counter", pass: "4444" }
+      { id: "C1", name: "Charity", gender: "F", pass: "4444" }
     ];
 
     const initialWaiters = [
-      { id: "101", name: "Rahim", pass: "1111" },
-      { id: "102", name: "Karim", pass: "2222" },
-      { id: "103", name: "Hasan", pass: "3333" }
+      { id: "101", name: "Rahim", gender: "M", pass: "1111" },
+      { id: "102", name: "Karim", gender: "M", pass: "2222" },
+      { id: "103", name: "Fatima", gender: "F", pass: "3333" }
     ];
 
     const rawDefaultMenu = [
@@ -884,7 +998,7 @@
       { name: "Voltic Mineral Water", isKitchen: false }
     ];
 
-    // Local in-memory caches
+    // State
     let globalActiveOrders = {};
     let globalSettings = defaultSettings;
     let globalRoleConfig = defaultRoleConfig;
@@ -892,25 +1006,27 @@
     let globalWaiters = initialWaiters;
     let globalMenu = rawDefaultMenu;
     let globalAuditLogs = [];
-    let globalDailySales = {};
+    let globalCompletedHistory = [];
 
     let currentUser = JSON.parse(sessionStorage.getItem('sneda_active_role_user') || 'null');
     let pendingRoleLogin = null;
-    let selectedSlot = null;
-    let cart = {};
-    let cartNotes = {};
 
-    // 2. LIVE FIREBASE REALTIME LISTENERS
+    // Active order building state
+    let activeOrderType = 'TABLE';
+    let selectedSlotNumber = '1';
+    let currentDraftBasket = [];
+
+    // Realtime Listeners
     db.ref('active_orders').on('value', snap => {
       globalActiveOrders = snap.val() || {};
-      renderAll();
-      if (selectedSlot) loadSlotDetails(selectedSlot);
+      renderKitchenDisplay();
+      renderActivePlacedOrders();
+      if (currentUser && currentUser.role === 'MANAGER') renderManagerPanel();
     });
 
     db.ref('settings').on('value', snap => {
       if (snap.exists()) globalSettings = snap.val();
-      applyThemeSettings();
-      renderAll();
+      applyBranding();
     });
 
     db.ref('role_config').on('value', snap => {
@@ -929,7 +1045,6 @@
 
     db.ref('menu').on('value', snap => {
       if (snap.exists()) globalMenu = snap.val();
-      renderMenu();
       if (currentUser && currentUser.role === 'MANAGER') renderManagerPanel();
     });
 
@@ -938,44 +1053,12 @@
       if (currentUser && currentUser.role === 'MANAGER') renderManagerPanel();
     });
 
-    db.ref('daily_sales').on('value', snap => {
-      globalDailySales = snap.val() || {};
+    db.ref('completed_history').on('value', snap => {
+      globalCompletedHistory = snap.val() || [];
       if (currentUser && currentUser.role === 'MANAGER') renderManagerPanel();
     });
 
-    function saveOrders(data) {
-      db.ref('active_orders').set(data);
-    }
-    function saveSettings(s) {
-      db.ref('settings').set(s);
-    }
-    function saveRoleConfig(c) {
-      db.ref('role_config').set(c);
-    }
-    function saveCashiers(l) {
-      db.ref('cashiers').set(l);
-    }
-    function saveWaiters(l) {
-      db.ref('waiters').set(l);
-    }
-    function saveMenu(m) {
-      db.ref('menu').set(m);
-    }
-    function appendAuditLog(entry) {
-      const logs = Array.isArray(globalAuditLogs) ? [...globalAuditLogs] : [];
-      logs.unshift(entry);
-      db.ref('audit_logs').set(logs);
-    }
-    function recordDailySales(itemsArray) {
-      const sales = { ...globalDailySales };
-      itemsArray.forEach(item => {
-        sales[item.name] = (sales[item.name] || 0) + item.qty;
-      });
-      db.ref('daily_sales').set(sales);
-    }
-
-    // 3. UI THEME ENGINE
-    function applyThemeSettings() {
+    function applyBranding() {
       const st = globalSettings;
       document.documentElement.style.setProperty('--primary', st.accentColor || '#2563eb');
       document.documentElement.style.setProperty('--bg', st.bgColor || '#0f172a');
@@ -988,33 +1071,25 @@
       document.getElementById('doc-title').innerText = st.appName;
       document.getElementById('gateway-app-name').innerText = st.appName;
       document.getElementById('header-brand-name').innerText = st.appName;
-      
-      const setApp = document.getElementById('mgr-set-appname');
-      const setFont = document.getElementById('mgr-set-font');
-      const setBg = document.getElementById('mgr-color-bg');
-      const setSurf = document.getElementById('mgr-color-surface');
-      const setBrd = document.getElementById('mgr-color-border');
-      const setTxt = document.getElementById('mgr-color-text');
-      const setPri = document.getElementById('mgr-color-primary');
 
-      const setDine = document.getElementById('mgr-set-dinein');
-      const setTake = document.getElementById('mgr-set-takeaway');
-      const setBolt = document.getElementById('mgr-set-bolt');
+      const mName = document.getElementById('mgr-set-appname');
+      const mFont = document.getElementById('mgr-set-font');
+      const mBg = document.getElementById('mgr-color-bg');
+      const mSurf = document.getElementById('mgr-color-surface');
+      const mBrd = document.getElementById('mgr-color-border');
+      const mTxt = document.getElementById('mgr-color-text');
+      const mPri = document.getElementById('mgr-color-primary');
 
-      if (setApp) setApp.value = st.appName;
-      if (setFont) setFont.value = st.fontFamily;
-      if (setBg) setBg.value = st.bgColor || '#0f172a';
-      if (setSurf) setSurf.value = st.surfaceColor || '#1e293b';
-      if (setBrd) setBrd.value = st.borderColor || '#475569';
-      if (setTxt) setTxt.value = st.textColor || '#f8fafc';
-      if (setPri) setPri.value = st.accentColor || '#2563eb';
-
-      if (setDine) setDine.value = st.dineInCount;
-      if (setTake) setTake.value = st.takeAwayCount;
-      if (setBolt) setBolt.value = st.boltCount;
+      if (mName) mName.value = st.appName;
+      if (mFont) mFont.value = st.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      if (mBg) mBg.value = st.bgColor || '#0f172a';
+      if (mSurf) mSurf.value = st.surfaceColor || '#1e293b';
+      if (mBrd) mBrd.value = st.borderColor || '#475569';
+      if (mTxt) mTxt.value = st.textColor || '#f8fafc';
+      if (mPri) mPri.value = st.accentColor || '#2563eb';
     }
 
-    // 4. AUTHENTICATION
+    // Auth Handlers (Miss for Females)
     function promptRoleLogin(role) {
       pendingRoleLogin = role;
       document.getElementById('modal-role-title').innerText = `${role} Login`;
@@ -1031,34 +1106,30 @@
     }
 
     function executeRoleLogin() {
-      const enteredPass = document.getElementById('modal-password').value.trim();
+      const pass = document.getElementById('modal-password').value.trim();
       const cfg = globalRoleConfig;
 
       if (pendingRoleLogin === 'MANAGER') {
-        if (enteredPass === cfg.managerPass) {
-          currentUser = { role: 'MANAGER', name: 'Restaurant Manager' };
-        } else {
-          return alert('Incorrect Manager PIN!');
-        }
+        if (pass === cfg.managerPass) currentUser = { role: 'MANAGER', name: 'Master Manager', salutation: 'Mr.' };
+        else return alert('Incorrect Manager PIN!');
       } else if (pendingRoleLogin === 'KITCHEN') {
-        if (enteredPass === cfg.kitchenPass) {
-          currentUser = { role: 'KITCHEN', name: 'Kitchen Chef' };
-        } else {
-          return alert('Incorrect Kitchen Password!');
-        }
+        if (pass === cfg.kitchenPass) currentUser = { role: 'KITCHEN', name: 'Kitchen Chef', salutation: 'Chef' };
+        else return alert('Incorrect Kitchen Password!');
       } else if (pendingRoleLogin === 'CASHIER') {
         const uId = document.getElementById('modal-user-id').value.trim();
-        const found = globalCashiers.find(c => c.id === uId && c.pass === enteredPass);
+        const found = globalCashiers.find(c => c.id === uId && c.pass === pass);
         if (found) {
-          currentUser = { role: 'CASHIER', name: found.name, id: found.id };
+          const salutation = found.gender === 'F' ? 'Miss' : 'Mr.';
+          currentUser = { role: 'CASHIER', name: found.name, id: found.id, gender: found.gender, salutation: salutation };
         } else {
           return alert('Invalid Cashier ID or Password!');
         }
       } else if (pendingRoleLogin === 'WAITER') {
         const waiterId = document.getElementById('modal-user-id').value.trim();
-        const found = globalWaiters.find(w => w.id === waiterId && w.pass === enteredPass);
+        const found = globalWaiters.find(w => w.id === waiterId && w.pass === pass);
         if (found) {
-          currentUser = { role: 'WAITER', name: found.name, id: found.id };
+          const salutation = found.gender === 'F' ? 'Miss' : 'Mr.';
+          currentUser = { role: 'WAITER', name: found.name, id: found.id, gender: found.gender, salutation: salutation };
         } else {
           return alert('Invalid Waiter ID or Password!');
         }
@@ -1078,12 +1149,11 @@
     }
 
     function initAppSession() {
-      applyThemeSettings();
+      applyBranding();
       if (!currentUser) {
         document.getElementById('role-selector-screen').style.display = 'flex';
         return;
       }
-
       document.getElementById('role-selector-screen').style.display = 'none';
       document.getElementById('app-user-badge').innerText = `${currentUser.name} (${currentUser.role}) ↩ Logout`;
 
@@ -1091,416 +1161,578 @@
       const navWrap = document.getElementById('header-nav-actions');
       navWrap.innerHTML = '';
 
-      if (currentUser.role === 'WAITER') {
-        document.getElementById('view-waiter').style.display = 'block';
+      if (currentUser.role === 'WAITER' || currentUser.role === 'CASHIER') {
+        setupOrderPortalUI();
+        document.getElementById('view-order-portal').style.display = 'block';
+        if (currentUser.role === 'CASHIER') {
+          document.getElementById('btn-cashier-finalize').style.display = 'block';
+        }
       } else if (currentUser.role === 'KITCHEN') {
         document.getElementById('view-kitchen').style.display = 'block';
-      } else if (currentUser.role === 'CASHIER') {
-        document.getElementById('view-cashier').style.display = 'block';
       } else if (currentUser.role === 'MANAGER') {
         navWrap.innerHTML = `
           <button class="user-badge" style="background:var(--primary); color:white;" onclick="switchManagerTab('view-manager')">Manager</button>
-          <button class="user-badge" onclick="switchManagerTab('view-cashier')">Cashier</button>
-          <button class="user-badge" onclick="switchManagerTab('view-kitchen')">Kitchen</button>
-          <button class="user-badge" onclick="switchManagerTab('view-waiter')">Waiter</button>
+          <button class="user-badge" onclick="switchManagerTab('view-order-portal')">Order Portal</button>
+          <button class="user-badge" onclick="switchManagerTab('view-kitchen')">Kitchen Display</button>
         `;
+        setupOrderPortalUI();
+        document.getElementById('btn-cashier-finalize').style.display = 'block';
         document.getElementById('view-manager').style.display = 'block';
       }
 
-      renderAll();
+      renderKitchenDisplay();
     }
 
     function switchManagerTab(viewId) {
       document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
       document.getElementById(viewId).style.display = 'block';
-      renderAll();
+      if (viewId === 'view-order-portal') setupOrderPortalUI();
+      if (viewId === 'view-manager') renderManagerPanel();
     }
 
-    // 5. SLOTS & ORDER WORKFLOW
-    function renderSlots(containerId, prefix, count, customClass) {
-      const db = globalActiveOrders;
-      const wrap = document.getElementById(containerId);
-      if (!wrap) return;
-      wrap.innerHTML = '';
-      for (let i = 1; i <= count; i++) {
-        const key = `${prefix}-${i}`;
-        const has = db[key] && db[key].length > 0;
-        const btn = document.createElement('div');
-        const isSel = selectedSlot === key;
-        btn.className = `slot-btn ${customClass} ${isSel ? 'active' : ''} ${has ? 'occupied' : ''}`;
-        btn.innerText = key;
-        btn.onclick = () => {
-          selectedSlot = key;
-          const wBar = document.getElementById('waiter-bar-slot');
-          const cBar = document.getElementById('cashier-bar-slot');
-          if (wBar) wBar.innerText = `${key} Selected`;
-          if (cBar) cBar.innerText = `${key} Selected`;
-          renderAll();
-          loadSlotDetails(key);
-        };
-        wrap.appendChild(btn);
+    function setupOrderPortalUI() {
+      const roleStr = currentUser.role.toLowerCase();
+      const prefix = currentUser.salutation || (currentUser.gender === 'F' ? 'Miss' : 'Mr.');
+      document.getElementById('portal-welcome-name').innerText = `Welcome, ${prefix} ${currentUser.name}, (${roleStr})`;
+      
+      const options = { day: 'numeric', month: 'long', year: 'numeric' };
+      const dateStr = new Date().toLocaleDateString('en-GB', options);
+      document.getElementById('portal-live-date').innerText = `Today Date is ${dateStr}`;
+
+      activeOrderType = 'TABLE';
+      selectedSlotNumber = '1';
+      document.getElementById('btn-type-table').classList.add('active');
+      document.getElementById('btn-type-takeway').classList.remove('active');
+      document.getElementById('btn-type-bolt').classList.remove('active');
+      updateHeadlineText();
+    }
+
+    function openSlotPopup(type) {
+      activeOrderType = type;
+      document.getElementById('btn-type-table').classList.toggle('active', type === 'TABLE');
+      document.getElementById('btn-type-takeway').classList.toggle('active', type === 'TAKEAWAY');
+      document.getElementById('btn-type-bolt').classList.toggle('active', type === 'BOLT');
+
+      const modal = document.getElementById('slot-picker-modal');
+      const title = document.getElementById('slot-picker-title');
+      const container = document.getElementById('popup-slot-grid-container');
+      const dbOrders = globalActiveOrders;
+
+      container.innerHTML = '';
+
+      if (type === 'TABLE') {
+        title.innerText = 'Select Table Number (1 - 22)';
+        for (let i = 1; i <= 22; i++) {
+          const key = `T-${i}`;
+          const isOcc = dbOrders[key] && dbOrders[key].some(t => t.status === 'pending');
+          const isSel = (selectedSlotNumber == i);
+          container.innerHTML += `
+            <div class="popup-slot-btn ${isSel ? 'active' : ''} ${isOcc ? 'occupied' : ''}" onclick="confirmSlotChoice('${i}')">
+              ${i}
+            </div>
+          `;
+        }
+      } else if (type === 'TAKEAWAY') {
+        title.innerText = 'Select Take Way Number (1 - 10)';
+        for (let i = 1; i <= 10; i++) {
+          const key = `TA-${i}`;
+          const isOcc = dbOrders[key] && dbOrders[key].some(t => t.status === 'pending');
+          const isSel = (selectedSlotNumber == i);
+          container.innerHTML += `
+            <div class="popup-slot-btn ${isSel ? 'active' : ''} ${isOcc ? 'occupied' : ''}" onclick="confirmSlotChoice('${i}')">
+              ${i}
+            </div>
+          `;
+        }
+      } else if (type === 'BOLT') {
+        title.innerText = 'Select Bolt Number (1 - 10)';
+        for (let i = 1; i <= 10; i++) {
+          const key = `Bolt-${i}`;
+          const isOcc = dbOrders[key] && dbOrders[key].some(t => t.status === 'pending');
+          const isSel = (selectedSlotNumber == i);
+          container.innerHTML += `
+            <div class="popup-slot-btn ${isSel ? 'active' : ''} ${isOcc ? 'occupied' : ''}" onclick="confirmSlotChoice('${i}')">
+              ${i}
+            </div>
+          `;
+        }
+      }
+
+      modal.style.display = 'flex';
+    }
+
+    function confirmSlotChoice(num) {
+      selectedSlotNumber = num;
+      closeSlotPickerModal();
+      updateHeadlineText();
+      renderActivePlacedOrders();
+    }
+
+    function closeSlotPickerModal() {
+      document.getElementById('slot-picker-modal').style.display = 'none';
+    }
+
+    function updateHeadlineText() {
+      const h = document.getElementById('headline-selected-slot');
+      if (activeOrderType === 'TABLE') {
+        h.innerText = `For Table Number: ${selectedSlotNumber}`;
+      } else if (activeOrderType === 'TAKEAWAY') {
+        h.innerText = `For Take Way Number: ${selectedSlotNumber}`;
+      } else if (activeOrderType === 'BOLT') {
+        h.innerText = `For Bolt Number: ${selectedSlotNumber}`;
       }
     }
 
-    function renderMenu() {
-      const isWaiter = (currentUser && currentUser.role === 'WAITER');
-      const searchBox = document.getElementById(isWaiter ? 'waiter-search' : 'cashier-search');
-      const search = (searchBox ? searchBox.value : '').toLowerCase().trim();
-      const menuListWrap = document.getElementById(isWaiter ? 'waiter-menu-list' : 'cashier-menu-list');
-      if (!menuListWrap) return;
-      menuListWrap.innerHTML = '';
+    function getFullSlotKey() {
+      if (activeOrderType === 'TABLE') return `T-${selectedSlotNumber}`;
+      if (activeOrderType === 'TAKEAWAY') return `TA-${selectedSlotNumber}`;
+      return `Bolt-${selectedSlotNumber}`;
+    }
 
-      const items = globalMenu;
-      const filtered = items.filter(i => i.name.toLowerCase().includes(search));
+    function handleSearchType() {
+      const input = document.getElementById('portal-search-bar');
+      const val = input.value.trim().toLowerCase();
+      const drop = document.getElementById('portal-search-results');
 
-      filtered.forEach(item => {
-        const qty = cart[item.name] || 0;
-        const note = cartNotes[item.name] || '';
-        const tagHtml = item.isKitchen 
-          ? `<span class="item-tag tag-kitchen">Kitchen</span>` 
-          : `<span class="item-tag tag-direct">Direct</span>`;
+      if (!val) {
+        drop.style.display = 'none';
+        return;
+      }
 
-        menuListWrap.innerHTML += `
-          <div class="item-card">
-            <div class="item-card-top">
+      const matches = globalMenu.filter(m => m.name.toLowerCase().includes(val));
+      if (matches.length === 0) {
+        drop.innerHTML = '<div style="padding:10px; color:var(--text-dim); font-size:0.85rem;">No food found. Click [?] to add custom item.</div>';
+        drop.style.display = 'block';
+        return;
+      }
+
+      drop.innerHTML = '';
+      matches.forEach(item => {
+        const catBadge = item.isKitchen 
+          ? '<span style="background:#854d0e; color:#fef08a; padding:2px 6px; border-radius:4px; font-size:0.7rem;">Kitchen</span>' 
+          : '<span style="background:#334155; color:#94a3b8; padding:2px 6px; border-radius:4px; font-size:0.7rem;">Direct</span>';
+
+        drop.innerHTML += `
+          <div class="search-res-item">
+            <div class="search-res-top">
               <div>
-                <span class="item-name">${item.name}</span>
-                ${tagHtml}
+                <strong>${item.name}</strong> ${catBadge}
               </div>
-              <div class="qty-box">
-                <button class="btn-qty" onclick="updateQty('${item.name}', -1)">-</button>
-                <span class="qty-val">${qty}</span>
-                <button class="btn-qty" onclick="updateQty('${item.name}', 1)">+</button>
-              </div>
+              <button onclick="addItemToDraftBasket('${item.name}', ${item.isKitchen})" style="background:var(--primary); color:white; border:none; padding:5px 12px; border-radius:6px; font-weight:700; cursor:pointer;">+ Add</button>
             </div>
-            <div class="item-note-row">
-              <input type="text" class="input-item-note" placeholder="✏️ Note: e.g. Extra spicy, less oil..." 
-                value="${note}" oninput="updateItemNote('${item.name}', this.value)">
+            <input type="text" id="note-for-${item.name.replace(/\s+/g, '-')}" class="note-inline-input" placeholder="✏️ Cooking Note: e.g. Extra spicy, less oil...">
+          </div>
+        `;
+      });
+      drop.style.display = 'block';
+    }
+
+    function addItemToDraftBasket(name, isKitchen) {
+      const noteInput = document.getElementById(`note-for-${name.replace(/\s+/g, '-')}`);
+      const note = noteInput ? noteInput.value.trim() : '';
+
+      const exist = currentDraftBasket.find(i => i.name === name && i.note === note);
+      if (exist) {
+        exist.qty += 1;
+      } else {
+        currentDraftBasket.push({
+          name: name,
+          qty: 1,
+          note: note,
+          isKitchen: isKitchen
+        });
+      }
+
+      document.getElementById('portal-search-bar').value = '';
+      document.getElementById('portal-search-results').style.display = 'none';
+      renderDraftBasket();
+    }
+
+    function renderDraftBasket() {
+      const wrap = document.getElementById('basket-items-container');
+      if (currentDraftBasket.length === 0) {
+        wrap.innerHTML = '<p style="color: var(--text-dim); font-size: 0.9rem;">No items added yet. Search food above to add.</p>';
+        return;
+      }
+
+      wrap.innerHTML = '';
+      currentDraftBasket.forEach((it, idx) => {
+        const noteBadge = it.note ? `<div style="font-size:0.75rem; color:#f59e0b; margin-top:2px;">(Note: ${it.note})</div>` : '';
+        wrap.innerHTML += `
+          <div class="basket-item-row">
+            <div>
+              <span class="basket-item-name">${idx + 1}. ${it.name}</span>
+              ${noteBadge}
+            </div>
+            <div style="display:flex; align-items:center;">
+              <span class="basket-item-qty">X${it.qty}</span>
+              <button class="btn-delete-cross" onclick="removeDraftItem(${idx})" title="Remove">✕</button>
             </div>
           </div>
         `;
       });
-
-      const total = Object.values(cart).reduce((a, b) => a + b, 0);
-      const countLabel = document.getElementById(isWaiter ? 'waiter-bar-count' : 'cashier-bar-count');
-      if (countLabel) countLabel.innerText = `${total} items selected`;
     }
 
-    function updateQty(name, delta) {
-      cart[name] = Math.max(0, (cart[name] || 0) + delta);
-      if (cart[name] === 0) delete cartNotes[name];
-      renderMenu();
+    function removeDraftItem(index) {
+      currentDraftBasket.splice(index, 1);
+      renderDraftBasket();
     }
 
-    function updateItemNote(name, noteVal) {
-      if (noteVal && noteVal.trim()) {
-        cartNotes[name] = noteVal.trim();
-        if (!cart[name] || cart[name] === 0) cart[name] = 1;
-      } else {
-        delete cartNotes[name];
+    function openQuestionModal() {
+      document.getElementById('qm-item-name').value = '';
+      document.getElementById('qm-item-qty').value = '1';
+      document.getElementById('question-modal').style.display = 'flex';
+    }
+
+    function closeQuestionModal() {
+      document.getElementById('question-modal').style.display = 'none';
+    }
+
+    function saveQuestionModalItem() {
+      const name = document.getElementById('qm-item-name').value.trim();
+      const isKitchen = document.getElementById('qm-item-kitchen').value === 'true';
+      const qty = parseInt(document.getElementById('qm-item-qty').value) || 1;
+
+      if (!name) return alert('Enter food or item name!');
+
+      currentDraftBasket.push({
+        name: `[Custom] ${name}`,
+        qty: qty,
+        note: '',
+        isKitchen: isKitchen
+      });
+
+      closeQuestionModal();
+      renderDraftBasket();
+    }
+
+    // Transfer to Kitchen
+    function transferToKitchen() {
+      if (currentDraftBasket.length === 0) {
+        return alert('Please add at least 1 item to the order before transferring!');
       }
-      const isWaiter = (currentUser && currentUser.role === 'WAITER');
-      const countLabel = document.getElementById(isWaiter ? 'waiter-bar-count' : 'cashier-bar-count');
-      const total = Object.values(cart).reduce((a, b) => a + b, 0);
-      if (countLabel) countLabel.innerText = `${total} items selected`;
-    }
 
-    function addCustomOutOfMenuItem(isCashier = false) {
-      if (!selectedSlot) return alert('Please select a Table, Take Away, or Bolt slot first!');
-      
-      const nameInput = document.getElementById(isCashier ? 'cashier-custom-name' : 'custom-item-name');
-      const noteInput = document.getElementById(isCashier ? 'cashier-custom-note' : 'custom-item-note');
-      const qtyInput = document.getElementById(isCashier ? 'cashier-custom-qty' : 'custom-item-qty');
-      const kitchSelect = document.getElementById('custom-item-kitchen');
-
-      const name = nameInput.value.trim();
-      const note = noteInput.value.trim();
-      const qty = parseInt(qtyInput.value) || 1;
-      const isKitchen = kitchSelect ? (kitchSelect.value === 'true') : true;
-
-      if (!name) return alert('Please enter the custom item name!');
-
+      const slotKey = getFullSlotKey();
       const dbOrders = { ...globalActiveOrders };
-      if (!dbOrders[selectedSlot]) dbOrders[selectedSlot] = [];
+      if (!dbOrders[slotKey]) dbOrders[slotKey] = [];
 
-      dbOrders[selectedSlot].push({
+      const now = new Date();
+      dbOrders[slotKey].push({
         id: Date.now(),
-        waiter: currentUser.name + (currentUser.id ? ` [${currentUser.id}]` : ''),
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        items: [{
-          name: `[Out of Menu] ${name}`,
-          qty: qty,
-          note: note || '',
-          isKitchen: isKitchen
-        }],
+        startTime: Date.now(),
+        orderType: activeOrderType,
+        slotNumber: selectedSlotNumber,
+        slotKey: slotKey,
+        date: now.toLocaleDateString('en-GB'),
+        time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        waiter: `${currentUser.name} (${currentUser.role})`,
+        staffId: currentUser.id || 'M1',
+        items: [...currentDraftBasket],
         status: 'pending'
       });
 
-      saveOrders(dbOrders);
-      nameInput.value = '';
-      noteInput.value = '';
-      qtyInput.value = 1;
-
-      alert(`Custom item "${name}" added to ${selectedSlot}!`);
+      db.ref('active_orders').set(dbOrders);
+      currentDraftBasket = [];
+      renderDraftBasket();
+      alert(`Order successfully transferred to Kitchen for ${slotKey}!`);
     }
 
-    function submitOrder() {
-      if (!selectedSlot) return alert('Please select a Table, Take Away, or Bolt slot first!');
-      const menu = globalMenu;
-      const items = [];
-      for (const name in cart) {
-        if (cart[name] > 0) {
-          const menuItem = menu.find(m => m.name === name);
-          items.push({ 
-            name: name, 
-            qty: cart[name], 
-            note: cartNotes[name] || '',
-            isKitchen: menuItem ? menuItem.isKitchen : true 
+    function renderActivePlacedOrders() {
+      const card = document.getElementById('active-placed-order-card');
+      const listWrap = document.getElementById('active-placed-items-list');
+      const slotKey = getFullSlotKey();
+      const tickets = globalActiveOrders[slotKey] || [];
+
+      document.getElementById('active-slot-placed-headline').innerText = `Active Placed Orders on ${slotKey}`;
+
+      if (tickets.length === 0) {
+        card.style.display = 'none';
+        return;
+      }
+
+      card.style.display = 'block';
+      listWrap.innerHTML = '';
+
+      tickets.forEach(ticket => {
+        ticket.items.forEach(it => {
+          const noteStr = it.note ? ` <small style="color:#f59e0b;">(${it.note})</small>` : '';
+          listWrap.innerHTML += `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dashed var(--border);">
+              <div>
+                <strong>${it.name}</strong> x${it.qty} ${noteStr}
+                <div style="font-size:0.75rem; color:var(--text-dim);">Punched at ${ticket.time} by ${ticket.waiter}</div>
+              </div>
+              <button onclick="requestCancelPlacedItem('${slotKey}', ${ticket.id}, '${it.name}', ${it.qty})" 
+                style="background:#7f1d1d; color:#fca5a5; border:1px solid #dc2626; padding:4px 8px; border-radius:6px; cursor:pointer; font-weight:700; font-size:0.75rem;">
+                Cancel Item
+              </button>
+            </div>
+          `;
+        });
+      });
+    }
+
+    function requestCancelPlacedItem(slotKey, ticketId, itemName, qty) {
+      const reason = prompt(`Cancellation Audit Required:\nWhy do you want to cancel "${itemName}" from ${slotKey}?\n(This reason will be sent to Kitchen & Manager logs):`);
+      if (reason === null) return;
+      if (!reason.trim()) return alert('Cancellation reason cannot be empty!');
+
+      const dbOrders = { ...globalActiveOrders };
+      if (!dbOrders[slotKey]) return;
+
+      const ticket = dbOrders[slotKey].find(t => t.id === ticketId);
+      if (!ticket) return;
+
+      const now = new Date();
+      const logs = Array.isArray(globalAuditLogs) ? [...globalAuditLogs] : [];
+      logs.unshift({
+        date: now.toLocaleDateString('en-GB'),
+        time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        slot: slotKey,
+        item: itemName,
+        qty: qty,
+        staff: `${currentUser.name} (${currentUser.role})`,
+        reason: reason.trim()
+      });
+      db.ref('audit_logs').set(logs);
+
+      ticket.items = ticket.items.filter(i => !(i.name === itemName));
+      if (ticket.items.length === 0) {
+        dbOrders[slotKey] = dbOrders[slotKey].filter(t => t.id !== ticketId);
+      }
+      if (dbOrders[slotKey].length === 0) {
+        delete dbOrders[slotKey];
+      }
+
+      db.ref('active_orders').set(dbOrders);
+      alert(`Item cancelled! Notification and reason logged to Kitchen & Manager.`);
+    }
+
+    function clearActiveSlotBill() {
+      const slotKey = getFullSlotKey();
+      const dbOrders = { ...globalActiveOrders };
+      if (!dbOrders[slotKey] || dbOrders[slotKey].length === 0) return alert('No orders to finalize.');
+
+      if (confirm(`Finalize payment and complete all orders for ${slotKey}?`)) {
+        const history = Array.isArray(globalCompletedHistory) ? [...globalCompletedHistory] : [];
+        const now = new Date();
+
+        dbOrders[slotKey].forEach(ticket => {
+          const start = Number(ticket.startTime) || Date.now();
+          const elapsedSec = ticket.readyDuration || Math.floor((Date.now() - start) / 1000);
+          const mins = Math.floor(elapsedSec / 60);
+          const secs = elapsedSec % 60;
+          const durationStr = `${mins}m ${secs}s`;
+
+          history.unshift({
+            date: ticket.date || now.toLocaleDateString('en-GB'),
+            time: ticket.time || now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            slot: slotKey,
+            items: ticket.items.map(i => `${i.name} (x${i.qty})`).join(', '),
+            duration: durationStr,
+            staff: ticket.waiter,
+            staffId: ticket.staffId || ''
           });
-        }
+        });
+
+        db.ref('completed_history').set(history);
+        delete dbOrders[slotKey];
+        db.ref('active_orders').set(dbOrders);
+        alert(`Bill cleared for ${slotKey}! Record saved to Manager History.`);
       }
-
-      if (items.length === 0) return alert('Select at least 1 food or drink item.');
-
-      const dbOrders = { ...globalActiveOrders };
-      if (!dbOrders[selectedSlot]) dbOrders[selectedSlot] = [];
-
-      dbOrders[selectedSlot].push({
-        id: Date.now(),
-        waiter: currentUser.name + (currentUser.id ? ` [${currentUser.id}]` : ''),
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        items: items,
-        status: 'pending'
-      });
-
-      saveOrders(dbOrders);
-      cart = {};
-      cartNotes = {};
-      const s1 = document.getElementById('waiter-search');
-      const s2 = document.getElementById('cashier-search');
-      if (s1) s1.value = '';
-      if (s2) s2.value = '';
-      alert(`Order sent to Google Cloud for ${selectedSlot}!`);
     }
 
-    function renderKitchen() {
-      const db = globalActiveOrders;
+    // --- CONSOLIDATED KITCHEN VIEW (1 Card per Table with Grouped Items) ---
+    function renderKitchenDisplay() {
       const wrap = document.getElementById('kitchen-ticket-list');
       if (!wrap) return;
       wrap.innerHTML = '';
+      const dbOrders = globalActiveOrders;
       let count = 0;
 
-      for (const slot in db) {
-        db[slot].forEach(ticket => {
-          if (ticket.status === 'pending') {
-            const kitchenOnlyItems = ticket.items.filter(it => it.isKitchen !== false);
+      // Group by Slot (e.g. T-16, TA-1, Bolt-2)
+      for (const slotKey in dbOrders) {
+        const allTickets = dbOrders[slotKey] || [];
+        const pendingTickets = allTickets.filter(t => t.status === 'pending');
 
-            if (kitchenOnlyItems.length > 0) {
-              count++;
-              const list = kitchenOnlyItems.map(it => {
-                const noteBadge = it.note ? `<div class="k-item-note">⚡ Note: ${it.note}</div>` : '';
-                return `
-                  <li>
-                    <div class="k-item-line">
-                      <span>${it.name}</span>
-                      <strong>x${it.qty}</strong>
-                    </div>
-                    ${noteBadge}
-                  </li>
-                `;
-              }).join('');
+        // Extract all kitchen cooked items across all batches for this table
+        let allKitchenItems = [];
+        let earliestStartTime = Infinity;
+        let waiterNames = new Set();
+        let earliestTime = '';
 
-              wrap.innerHTML += `
-                <div class="k-card">
-                  <div class="k-head">
-                    <strong>${slot}</strong>
-                    <span class="k-waiter">${ticket.waiter}</span>
-                    <small style="color:var(--text-dim);">${ticket.time}</small>
-                  </div>
-                  <ul class="k-items">${list}</ul>
-                  <button class="btn-done" onclick="markKitchenDone('${slot}', ${ticket.id})">Mark Prepared</button>
+        pendingTickets.forEach(ticket => {
+          const sTime = Number(ticket.startTime) || ticket.id || Date.now();
+          if (sTime < earliestStartTime) {
+            earliestStartTime = sTime;
+            earliestTime = ticket.time || '';
+          }
+          if (ticket.waiter) waiterNames.add(ticket.waiter);
+
+          const cookedItems = (ticket.items || []).filter(i => i.isKitchen !== false);
+          cookedItems.forEach(item => {
+            allKitchenItems.push({
+              name: item.name,
+              qty: item.qty,
+              note: item.note || '',
+              batchTime: ticket.time || ''
+            });
+          });
+        });
+
+        // Only show if there are pending kitchen items
+        if (allKitchenItems.length > 0) {
+          count++;
+
+          // Slot Headline
+          let headlineTitle = '';
+          let cardClass = '';
+          if (slotKey.startsWith('T-')) {
+            const tableNo = slotKey.replace('T-', '');
+            headlineTitle = `TABLE ORDER (TABLE ${tableNo})`;
+          } else if (slotKey.startsWith('TA-')) {
+            const taNo = slotKey.replace('TA-', '');
+            headlineTitle = `TAKE WAY (ORDER ${taNo})`;
+            cardClass = 'takeaway';
+          } else if (slotKey.startsWith('Bolt-')) {
+            const boltNo = slotKey.replace('Bolt-', '');
+            headlineTitle = `BOLT ORDER (ORDER ${boltNo})`;
+            cardClass = 'bolt';
+          } else {
+            headlineTitle = `${slotKey} ORDER`;
+          }
+
+          // Build Items List
+          const itemsListHtml = allKitchenItems.map(i => {
+            const noteHtml = i.note ? `<div class="k-item-note">⚡ Note: ${i.note}</div>` : '';
+            return `
+              <li>
+                <div class="k-item-info">
+                  <span>${i.name}</span>
+                  <span class="k-item-qty">X${i.qty}</span>
                 </div>
-              `;
+                ${noteHtml}
+                <div class="k-batch-tag">Added at: ${i.batchTime}</div>
+              </li>
+            `;
+          }).join('');
+
+          const safeSlotId = slotKey.replace(/[^a-zA-Z0-9]/g, '_');
+          const waiterListStr = Array.from(waiterNames).join(', ');
+
+          wrap.innerHTML += `
+            <div class="k-card ${cardClass}">
+              <div class="k-headline-row">
+                <div class="k-order-badge">${headlineTitle}</div>
+                <div class="k-timer-badge" id="timer-slot-${safeSlotId}">⏱️ 00m 00s</div>
+              </div>
+              <div class="k-meta-row">
+                First ordered at <strong>${earliestTime}</strong> by <strong>${waiterListStr}</strong>
+              </div>
+              <ul class="k-items-list">${itemsListHtml}</ul>
+              <button class="btn-done" onclick="markAllKitchenPreparedForSlot('${slotKey}')">Mark Prepared</button>
+            </div>
+          `;
+        }
+      }
+
+      if (count === 0) {
+        wrap.innerHTML = '<p style="color:var(--text-dim); padding:10px;">No active orders cooking in kitchen.</p>';
+      }
+    }
+
+    // Consolidated Table-Level Live Timer Tick
+    setInterval(() => {
+      const dbOrders = globalActiveOrders;
+      for (const slotKey in dbOrders) {
+        const pendingTickets = (dbOrders[slotKey] || []).filter(t => t.status === 'pending');
+        if (pendingTickets.length > 0) {
+          let earliestStartTime = Infinity;
+          pendingTickets.forEach(t => {
+            const sTime = Number(t.startTime) || t.id || Date.now();
+            if (sTime < earliestStartTime) earliestStartTime = sTime;
+          });
+
+          if (earliestStartTime !== Infinity) {
+            const safeSlotId = slotKey.replace(/[^a-zA-Z0-9]/g, '_');
+            const timerEl = document.getElementById(`timer-slot-${safeSlotId}`);
+            if (timerEl) {
+              const diffSec = Math.max(0, Math.floor((Date.now() - earliestStartTime) / 1000));
+              const m = Math.floor(diffSec / 60);
+              const s = diffSec % 60;
+              timerEl.innerText = `⏱️ ${m < 10 ? '0' : ''}${m}m ${s < 10 ? '0' : ''}${s}s`;
             }
           }
-        });
-      }
-      if (count === 0) wrap.innerHTML = '<p style="color:var(--text-dim);">No active kitchen cooking orders.</p>';
-    }
-
-    function markKitchenDone(slot, id) {
-      const dbOrders = { ...globalActiveOrders };
-      if (dbOrders[slot]) {
-        dbOrders[slot] = dbOrders[slot].map(t => t.id === id ? { ...t, status: 'done' } : t);
-        saveOrders(dbOrders);
-      }
-    }
-
-    function loadSlotDetails(slot) {
-      const db = globalActiveOrders;
-      
-      const cBox = document.getElementById('cashier-details-box');
-      const cRows = document.getElementById('cashier-table-rows');
-      if (cBox && cRows) {
-        document.getElementById('cashier-slot-title').innerText = `${slot} Summary`;
-        cBox.style.display = 'block';
-        cRows.innerHTML = '';
-
-        if (!db[slot] || db[slot].length === 0) {
-          cRows.innerHTML = '<tr><td colspan="5" style="color:var(--text-dim);">No active orders for this slot.</td></tr>';
-        } else {
-          db[slot].forEach(ticket => {
-            ticket.items.forEach(it => {
-              const noteDisplay = it.note ? `<br><small style="color:#f59e0b; font-weight:600;">(Note: ${it.note})</small>` : '';
-              cRows.innerHTML += `
-                <tr>
-                  <td>
-                    <strong>${it.name}</strong> 
-                    ${it.isKitchen ? '<span class="item-tag tag-kitchen">Kitchen</span>' : '<span class="item-tag tag-direct">Direct</span>'}
-                    ${noteDisplay}
-                  </td>
-                  <td><span style="color:var(--primary); font-weight:600;">${ticket.waiter}</span></td>
-                  <td style="color:var(--text-dim); font-size:0.85rem;">${ticket.time}</td>
-                  <td style="font-weight:700;">${it.qty}</td>
-                  <td>
-                    <button class="btn-cancel-item" onclick="cancelSpecificItem('${slot}', ${ticket.id}, '${it.name}', ${it.qty})">Cancel</button>
-                  </td>
-                </tr>
-              `;
-            });
-          });
         }
       }
+    }, 1000);
 
-      const wBox = document.getElementById('waiter-table-active-box');
-      const wRows = document.getElementById('waiter-active-table-rows');
-      if (wBox && wRows) {
-        document.getElementById('waiter-active-slot-title').innerText = `Active Items on ${slot}`;
-        wBox.style.display = 'block';
-        wRows.innerHTML = '';
-
-        if (!db[slot] || db[slot].length === 0) {
-          wRows.innerHTML = '<tr><td colspan="4" style="color:var(--text-dim);">No active orders on this table.</td></tr>';
-        } else {
-          db[slot].forEach(ticket => {
-            ticket.items.forEach(it => {
-              const noteDisplay = it.note ? `<br><small style="color:#f59e0b;">(Note: ${it.note})</small>` : '';
-              wRows.innerHTML += `
-                <tr>
-                  <td>${it.name} ${noteDisplay}</td>
-                  <td><strong>${it.qty}</strong></td>
-                  <td><small style="color:#38bdf8;">${ticket.waiter}</small></td>
-                  <td>
-                    <button class="btn-cancel-item" onclick="cancelSpecificItem('${slot}', ${ticket.id}, '${it.name}', ${it.qty})">Cancel</button>
-                  </td>
-                </tr>
-              `;
-            });
-          });
-        }
-      }
-    }
-
-    function cancelSpecificItem(slot, ticketId, itemName, currentQty) {
-      const reason = prompt(`Cancelling ${itemName} from ${slot}.\nEnter cancellation reason:`);
-      if (reason === null) return;
-
+    // Complete all pending batches for a slot and vanish from kitchen
+    function markAllKitchenPreparedForSlot(slotKey) {
       const dbOrders = { ...globalActiveOrders };
-      if (!dbOrders[slot]) return;
-
-      const ticket = dbOrders[slot].find(t => t.id === ticketId);
-      if (!ticket) return;
-
-      appendAuditLog({
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-        date: new Date().toLocaleDateString(),
-        slot: slot,
-        item: itemName,
-        qty: currentQty,
-        staff: currentUser.name + (currentUser.id ? ` [${currentUser.id}]` : ''),
-        reason: reason.trim() || 'No reason provided'
-      });
-
-      ticket.items = ticket.items.filter(it => it.name !== itemName);
-
-      if (ticket.items.length === 0) {
-        dbOrders[slot] = dbOrders[slot].filter(t => t.id !== ticketId);
-      }
-      if (dbOrders[slot].length === 0) {
-        delete dbOrders[slot];
-      }
-
-      saveOrders(dbOrders);
-      alert(`${itemName} cancelled & synced across all phones!`);
-    }
-
-    function clearActiveSlot() {
-      if (!selectedSlot) return;
-      const dbOrders = { ...globalActiveOrders };
-      if (!dbOrders[selectedSlot] || dbOrders[selectedSlot].length === 0) return alert('No orders to clear.');
-
-      if (confirm(`Finalize payment and complete order for ${selectedSlot}?`)) {
-        const allItemsConsumed = [];
-        dbOrders[selectedSlot].forEach(t => {
-          t.items.forEach(i => allItemsConsumed.push(i));
+      if (dbOrders[slotKey]) {
+        const now = Date.now();
+        dbOrders[slotKey] = dbOrders[slotKey].map(t => {
+          if (t.status === 'pending') {
+            const start = Number(t.startTime) || t.id || now;
+            return {
+              ...t,
+              status: 'done',
+              readyDuration: Math.floor((now - start) / 1000)
+            };
+          }
+          return t;
         });
-        recordDailySales(allItemsConsumed);
-
-        delete dbOrders[selectedSlot];
-        saveOrders(dbOrders);
-        alert(`Bill completed for ${selectedSlot}! Recorded in Daily Sales History.`);
+        db.ref('active_orders').set(dbOrders);
       }
     }
 
-    function saveCustomBranding() {
-      const appName = document.getElementById('mgr-set-appname').value.trim();
-      const font = document.getElementById('mgr-set-font').value;
-      const bg = document.getElementById('mgr-color-bg').value;
-      const surf = document.getElementById('mgr-color-surface').value;
-      const brd = document.getElementById('mgr-color-border').value;
-      const txt = document.getElementById('mgr-color-text').value;
-      const pri = document.getElementById('mgr-color-primary').value;
-
-      if (!appName) return alert('Restaurant name cannot be empty!');
-      const st = { ...globalSettings };
-      st.appName = appName;
-      st.fontFamily = font;
-      st.bgColor = bg;
-      st.surfaceColor = surf;
-      st.borderColor = brd;
-      st.textColor = txt;
-      st.accentColor = pri;
-
-      saveSettings(st);
-      alert('All colors, theme & typography updated in Google Cloud!');
-    }
-
-    function resetDefaultColors() {
-      if (confirm('Reset colors back to original dark theme?')) {
-        const st = { ...globalSettings };
-        st.bgColor = "#0f172a";
-        st.surfaceColor = "#1e293b";
-        st.borderColor = "#475569";
-        st.textColor = "#f8fafc";
-        st.accentColor = "#2563eb";
-        saveSettings(st);
-      }
-    }
-
-    function saveSlotCounts() {
-      const d = parseInt(document.getElementById('mgr-set-dinein').value) || 22;
-      const t = parseInt(document.getElementById('mgr-set-takeaway').value) || 10;
-      const b = parseInt(document.getElementById('mgr-set-bolt').value) || 10;
-
-      const st = { ...globalSettings };
-      st.dineInCount = d;
-      st.takeAwayCount = t;
-      st.boltCount = b;
-      saveSettings(st);
-      alert('Table and Slot quantities updated!');
-    }
-
+    // MANAGER PANEL RENDERING & LEADERBOARD
     function renderManagerPanel() {
+      // 1. Staff Leaderboard (Order Count Analytics)
+      const lBody = document.getElementById('manager-leaderboard-tbody');
+      if (lBody) {
+        lBody.innerHTML = '';
+        const orderCounts = {};
+
+        globalCompletedHistory.forEach(h => {
+          if (h.staff) {
+            orderCounts[h.staff] = (orderCounts[h.staff] || 0) + 1;
+          }
+        });
+
+        for (const slot in globalActiveOrders) {
+          globalActiveOrders[slot].forEach(t => {
+            if (t.waiter) {
+              orderCounts[t.waiter] = (orderCounts[t.waiter] || 0) + 1;
+            }
+          });
+        }
+
+        const sortedStaff = Object.keys(orderCounts).map(name => ({
+          name: name,
+          count: orderCounts[name]
+        })).sort((a, b) => b.count - a.count);
+
+        if (sortedStaff.length === 0) {
+          lBody.innerHTML = '<tr><td colspan="4" style="color:var(--text-dim);">No orders recorded yet today.</td></tr>';
+        } else {
+          sortedStaff.forEach((st, idx) => {
+            const medal = idx === 0 ? '🥇 Top Waiter' : (idx === 1 ? '🥈 2nd' : (idx === 2 ? '🥉 3rd' : `#${idx + 1}`));
+            const rowStyle = idx === 0 ? 'background: rgba(245, 158, 11, 0.15); font-weight:bold;' : '';
+            lBody.innerHTML += `
+              <tr style="${rowStyle}">
+                <td>${medal}</td>
+                <td style="color:#38bdf8;">${st.name}</td>
+                <td>Active Staff</td>
+                <td style="font-size:1.1rem; color:#10b981; font-weight:800;">${st.count} Orders</td>
+              </tr>
+            `;
+          });
+        }
+      }
+
+      // 2. Staff Accounts Table with Miss / Mr.
       const tbody = document.getElementById('manager-staff-tbody');
       if (tbody) {
         tbody.innerHTML = '';
@@ -1511,23 +1743,27 @@
         tbody.innerHTML += `
           <tr style="background: rgba(239, 68, 68, 0.1);">
             <td><strong>MANAGER</strong></td>
-            <td>Restaurant Manager</td>
+            <td>Master Manager</td>
+            <td>Male (Mr.)</td>
             <td><code style="color:#f59e0b;">${cfg.managerPass}</code></td>
             <td><button onclick="managerChangeSystemPass('MANAGER')" style="background:#0284c7; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Change PIN</button></td>
           </tr>
           <tr style="background: rgba(245, 158, 11, 0.1);">
             <td><strong>KITCHEN</strong></td>
             <td>Kitchen Display</td>
+            <td>-</td>
             <td><code style="color:#f59e0b;">${cfg.kitchenPass}</code></td>
             <td><button onclick="managerChangeSystemPass('KITCHEN')" style="background:#0284c7; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Change Pass</button></td>
           </tr>
         `;
 
         cashiers.forEach(c => {
+          const title = c.gender === 'F' ? 'Miss' : 'Mr.';
           tbody.innerHTML += `
             <tr style="background: rgba(16, 185, 129, 0.08);">
               <td><strong>${c.id}</strong> (Cashier)</td>
-              <td>${c.name}</td>
+              <td>${title} ${c.name}</td>
+              <td>${c.gender === 'F' ? 'Female (Miss)' : 'Male (Mr.)'}</td>
               <td><code style="color:#10b981;">${c.pass}</code></td>
               <td>
                 <button onclick="managerEditStaffPass('CASHIER', '${c.id}')" style="background:#0284c7; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Pass</button>
@@ -1538,10 +1774,12 @@
         });
 
         waiters.forEach(w => {
+          const title = w.gender === 'F' ? 'Miss' : 'Mr.';
           tbody.innerHTML += `
             <tr>
               <td><strong>${w.id}</strong> (Waiter)</td>
-              <td>${w.name}</td>
+              <td>${title} ${w.name}</td>
+              <td>${w.gender === 'F' ? 'Female (Miss)' : 'Male (Mr.)'}</td>
               <td><code style="color:var(--primary);">${w.pass}</code></td>
               <td>
                 <button onclick="managerEditStaffPass('WAITER', '${w.id}')" style="background:#0284c7; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Pass</button>
@@ -1552,121 +1790,107 @@
         });
       }
 
-      const menu = globalMenu;
-      const mWrap = document.getElementById('manager-menu-list');
-      if (mWrap) {
-        document.getElementById('mgr-total-items').innerText = menu.length;
-        mWrap.innerHTML = '';
-        menu.forEach((item, index) => {
-          mWrap.innerHTML += `
-            <li class="manager-item">
-              <div>
-                <strong>${index + 1}.</strong> ${item.name}
-                ${item.isKitchen ? '<span class="item-tag tag-kitchen">Kitchen Cooked</span>' : '<span class="item-tag tag-direct">Direct / Outside</span>'}
-              </div>
-              <div>
-                <button onclick="managerToggleKitchenRouting(${index})" style="background:#0284c7; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.75rem; margin-right:4px;">Toggle Type</button>
-                <button onclick="managerDeleteMenuItem(${index})" style="background:var(--danger); color:white; border:none; padding:4px 8px; border-radius:4px; cursor:font-size:0.75rem;">Delete</button>
-              </div>
-            </li>
-          `;
-        });
-      }
-
-      const dBody = document.getElementById('manager-daily-sales-tbody');
-      if (dBody) {
-        dBody.innerHTML = '';
-        const sales = globalDailySales;
-        const keys = Object.keys(sales);
-        if (keys.length === 0) {
-          dBody.innerHTML = '<tr><td colspan="3" style="color:var(--text-dim); text-align:center;">No finished orders recorded yet today.</td></tr>';
+      // 3. History Table with Duration
+      const hBody = document.getElementById('manager-history-tbody');
+      if (hBody) {
+        hBody.innerHTML = '';
+        const list = globalCompletedHistory;
+        if (list.length === 0) {
+          hBody.innerHTML = '<tr><td colspan="6" style="color:var(--text-dim);">No completed orders yet.</td></tr>';
         } else {
-          keys.forEach(name => {
-            const mItem = menu.find(m => m.name === name);
-            const typeStr = (mItem && mItem.isKitchen) ? 'Kitchen Cooked' : 'Direct / Drink';
-            dBody.innerHTML += `
+          list.forEach(h => {
+            hBody.innerHTML += `
               <tr>
-                <td style="text-align:left; padding-left:12px;"><strong>${name}</strong></td>
-                <td><small style="color:var(--text-dim);">${typeStr}</small></td>
-                <td style="font-weight:800; font-size:1.05rem; color:#38bdf8;">${sales[name]} pcs</td>
+                <td>${h.date}</td>
+                <td>${h.time}</td>
+                <td><strong>${h.slot}</strong></td>
+                <td>${h.items}</td>
+                <td><span style="color:#10b981; font-weight:700;">${h.duration}</span></td>
+                <td><small>${h.staff}</small></td>
               </tr>
             `;
           });
         }
       }
 
+      // 4. Audit Logs Table
       const aBody = document.getElementById('manager-audit-log-tbody');
       if (aBody) {
         aBody.innerHTML = '';
         const logs = globalAuditLogs;
-        if (!logs || logs.length === 0) {
-          aBody.innerHTML = '<tr><td colspan="6" style="color:var(--text-dim); text-align:center;">No cancellations recorded.</td></tr>';
+        if (logs.length === 0) {
+          aBody.innerHTML = '<tr><td colspan="6" style="color:var(--text-dim);">No cancellations recorded.</td></tr>';
         } else {
           logs.forEach(l => {
             aBody.innerHTML += `
               <tr>
-                <td><small>${l.time}</small></td>
+                <td>${l.date} ${l.time}</td>
                 <td><strong>${l.slot}</strong></td>
                 <td style="color:#fca5a5;">${l.item}</td>
-                <td><strong>${l.qty}</strong></td>
-                <td><span style="color:#38bdf8;">${l.staff}</span></td>
+                <td><strong>x${l.qty}</strong></td>
+                <td>${l.staff}</td>
                 <td><small style="color:#f59e0b;">"${l.reason}"</small></td>
               </tr>
             `;
           });
         }
       }
-    }
 
-    function managerToggleKitchenRouting(index) {
-      const menu = [...globalMenu];
-      menu[index].isKitchen = !menu[index].isKitchen;
-      saveMenu(menu);
-    }
-
-    function managerChangeSystemPass(role) {
-      const cfg = { ...globalRoleConfig };
-      const newP = prompt(`Enter new password for ${role}:`);
-      if (newP && newP.trim().length >= 1) {
-        if (role === 'MANAGER') cfg.managerPass = newP.trim();
-        if (role === 'KITCHEN') cfg.kitchenPass = newP.trim();
-        saveRoleConfig(cfg);
-        alert(`${role} password updated!`);
+      // 5. Menu List
+      const mWrap = document.getElementById('manager-menu-list');
+      if (mWrap) {
+        document.getElementById('mgr-total-items').innerText = globalMenu.length;
+        mWrap.innerHTML = '';
+        globalMenu.forEach((item, idx) => {
+          mWrap.innerHTML += `
+            <li style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
+              <span><strong>${idx + 1}.</strong> ${item.name} (${item.isKitchen ? '🍳 Kitchen' : '🥤 Direct'})</span>
+              <button onclick="managerDeleteMenuItem(${idx})" style="background:var(--danger); color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Delete</button>
+            </li>
+          `;
+        });
       }
     }
 
-    function managerEditStaffPass(role, id) {
-      const newP = prompt(`Enter new password for ${role} ID ${id}:`);
-      if (newP && newP.trim()) {
-        if (role === 'CASHIER') {
-          const list = [...globalCashiers];
-          const target = list.find(x => x.id === id);
-          if (target) target.pass = newP.trim();
-          saveCashiers(list);
-        } else {
-          const list = [...globalWaiters];
-          const target = list.find(x => x.id === id);
-          if (target) target.pass = newP.trim();
-          saveWaiters(list);
-        }
-        alert(`Password updated for ${id}!`);
-      }
+    // Manager Actions
+    function saveCustomBrandingTheme() {
+      const name = document.getElementById('mgr-set-appname').value.trim();
+      const font = document.getElementById('mgr-set-font').value;
+      const bg = document.getElementById('mgr-color-bg').value;
+      const surf = document.getElementById('mgr-color-surface').value;
+      const brd = document.getElementById('mgr-color-border').value;
+      const txt = document.getElementById('mgr-color-text').value;
+      const pri = document.getElementById('mgr-color-primary').value;
+
+      if (!name) return alert('Restaurant name cannot be empty!');
+      const st = { ...globalSettings };
+      st.appName = name;
+      st.fontFamily = font;
+      st.bgColor = bg;
+      st.surfaceColor = surf;
+      st.borderColor = brd;
+      st.textColor = txt;
+      st.accentColor = pri;
+
+      db.ref('settings').set(st);
+      alert('All colors, theme & typography updated in Firebase!');
     }
 
-    function managerDeleteStaff(role, id) {
-      if (confirm(`Remove ${role} account ${id}?`)) {
-        if (role === 'CASHIER') {
-          const list = globalCashiers.filter(x => x.id !== id);
-          saveCashiers(list);
-        } else {
-          const list = globalWaiters.filter(x => x.id !== id);
-          saveWaiters(list);
-        }
+    function resetDefaultThemeColors() {
+      if (confirm('Reset colors back to original dark theme?')) {
+        const st = { ...globalSettings };
+        st.bgColor = "#0f172a";
+        st.surfaceColor = "#1e293b";
+        st.borderColor = "#475569";
+        st.textColor = "#f8fafc";
+        st.accentColor = "#2563eb";
+        db.ref('settings').set(st);
       }
     }
 
     function managerAddNewStaffMember() {
       const role = document.getElementById('mgr-new-role').value;
+      const gender = document.getElementById('mgr-new-gender').value;
       const id = document.getElementById('mgr-new-id').value.trim();
       const name = document.getElementById('mgr-new-name').value.trim();
       const pass = document.getElementById('mgr-new-pass').value.trim();
@@ -1676,55 +1900,78 @@
       if (role === 'CASHIER') {
         const list = [...globalCashiers];
         if (list.some(x => x.id === id)) return alert('Cashier ID exists!');
-        list.push({ id, name, pass });
-        saveCashiers(list);
+        list.push({ id, name, gender, pass });
+        db.ref('cashiers').set(list);
       } else {
         const list = [...globalWaiters];
         if (list.some(x => x.id === id)) return alert('Waiter ID exists!');
-        list.push({ id, name, pass });
-        saveWaiters(list);
+        list.push({ id, name, gender, pass });
+        db.ref('waiters').set(list);
       }
 
       document.getElementById('mgr-new-id').value = '';
       document.getElementById('mgr-new-name').value = '';
       document.getElementById('mgr-new-pass').value = '';
-      alert(`New ${role} "${name}" added to Firebase!`);
+      alert(`New ${gender === 'F' ? 'Miss' : 'Mr.'} ${name} added successfully!`);
+    }
+
+    function managerEditStaffPass(role, id) {
+      const newP = prompt(`Enter new password for ${role} ID ${id}:`);
+      if (newP && newP.trim()) {
+        if (role === 'CASHIER') {
+          const list = [...globalCashiers];
+          const target = list.find(x => x.id === id);
+          if (target) target.pass = newP.trim();
+          db.ref('cashiers').set(list);
+        } else {
+          const list = [...globalWaiters];
+          const target = list.find(x => x.id === id);
+          if (target) target.pass = newP.trim();
+          db.ref('waiters').set(list);
+        }
+        alert(`Password updated for ${id}!`);
+      }
+    }
+
+    function managerDeleteStaff(role, id) {
+      if (confirm(`Remove ${role} account ${id}?`)) {
+        if (role === 'CASHIER') {
+          const list = globalCashiers.filter(x => x.id !== id);
+          db.ref('cashiers').set(list);
+        } else {
+          const list = globalWaiters.filter(x => x.id !== id);
+          db.ref('waiters').set(list);
+        }
+      }
+    }
+
+    function managerChangeSystemPass(role) {
+      const cfg = { ...globalRoleConfig };
+      const newP = prompt(`Enter new PIN/Password for ${role}:`);
+      if (newP && newP.trim().length >= 1) {
+        if (role === 'MANAGER') cfg.managerPass = newP.trim();
+        if (role === 'KITCHEN') cfg.kitchenPass = newP.trim();
+        db.ref('role_config').set(cfg);
+        alert(`${role} password updated!`);
+      }
     }
 
     function managerAddNewMenuItem() {
       const input = document.getElementById('mgr-new-item');
-      const isKitchen = document.getElementById('mgr-new-item-type').value === 'true';
       const val = input.value.trim();
-      if (!val) return alert('Enter food or drink name!');
-      const menu = [...globalMenu];
-      menu.push({ name: val, isKitchen: isKitchen });
-      menu.sort((a,b) => a.name.localeCompare(b.name));
-      saveMenu(menu);
+      const isKitchen = document.getElementById('mgr-new-item-type').value === 'true';
+      if (!val) return alert('Enter food name!');
+      const m = [...globalMenu, { name: val, isKitchen: isKitchen }];
+      m.sort((a,b) => a.name.localeCompare(b.name));
+      db.ref('menu').set(m);
       input.value = '';
-      alert(`"${val}" added to menu!`);
     }
 
-    function managerDeleteMenuItem(index) {
-      const menu = [...globalMenu];
-      if (confirm(`Delete "${menu[index].name}" from menu?`)) {
-        menu.splice(index, 1);
-        saveMenu(menu);
-      }
-    }
-
-    function renderAll() {
-      const st = globalSettings;
-      renderSlots('waiter-grid-dinein', 'T', st.dineInCount, '');
-      renderSlots('waiter-grid-takeaway', 'TA', st.takeAwayCount, 'takeaway');
-      renderSlots('waiter-grid-bolt', 'Bolt', st.boltCount, 'bolt');
-
-      renderSlots('cashier-grid-dinein', 'T', st.dineInCount, '');
-      renderSlots('cashier-grid-takeaway', 'TA', st.takeAwayCount, 'takeaway');
-      renderSlots('cashier-grid-bolt', 'Bolt', st.boltCount, 'bolt');
-
-      renderKitchen();
-      if (currentUser && currentUser.role === 'MANAGER') {
-        renderManagerPanel();
+    function managerDeleteMenuItem(idx) {
+      if (confirm(`Delete "${globalMenu[idx].name}"?`)) {
+        const m = [...globalMenu];
+        m.splice(idx, 1);
+        db.ref('menu').set(m);
       }
     }
 
