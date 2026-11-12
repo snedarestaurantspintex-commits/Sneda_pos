@@ -143,7 +143,7 @@
       cursor: pointer;
     }
 
-    /* Slot Picker Grid inside Popup */
+    /* Slot Picker Grid inside Popup (SOLID RED FOR BLOCKED TABLES) */
     .popup-slot-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -155,12 +155,12 @@
     }
     .popup-slot-btn {
       background: #334155;
-      border: 1px solid #475569;
+      border: 2px solid #475569;
       color: #f8fafc;
       padding: 12px 0;
       border-radius: 10px;
       text-align: center;
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: 800;
       cursor: pointer;
       position: relative;
@@ -168,18 +168,22 @@
     }
     .popup-slot-btn:active { transform: scale(0.92); }
     .popup-slot-btn.active {
-      background: var(--primary);
-      border-color: #93c5fd;
+      background: var(--primary) !important;
+      border-color: #93c5fd !important;
+      color: white !important;
+    }
+    .popup-slot-btn.occupied {
+      background: rgba(220, 38, 38, 0.28) !important;
+      border: 2.5px solid #ef4444 !important;
+      color: #fecaca !important;
     }
     .popup-slot-btn.occupied::after {
-      content: '';
+      content: '●';
       position: absolute;
-      top: 5px;
-      right: 5px;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--danger);
+      top: 3px;
+      right: 6px;
+      font-size: 0.75rem;
+      color: #ef4444;
     }
 
     /* Top App Header */
@@ -252,6 +256,13 @@
       font-weight: 800;
       color: var(--text);
       margin: 10px 0 10px 0;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+    }
+    .headline-warning {
+      color: #f59e0b !important;
+      font-size: 1.15rem;
     }
 
     .search-flex-row {
@@ -285,12 +296,13 @@
       justify-content: center;
     }
 
+    /* Auto Search Match Dropdown List */
     .search-dropdown-list {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
       margin-bottom: 14px;
-      max-height: 250px;
+      max-height: 290px;
       overflow-y: auto;
       display: none;
     }
@@ -307,6 +319,41 @@
       justify-content: space-between;
       align-items: center;
     }
+
+    /* [-] QTY [+] Stepper in Search */
+    .stepper-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2px 6px;
+    }
+    .btn-stepper {
+      width: 32px;
+      height: 32px;
+      background: #1e293b;
+      border: 1px solid var(--border);
+      color: #fff;
+      font-size: 1.15rem;
+      font-weight: 800;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+    .btn-stepper:active { transform: scale(0.92); }
+    .stepper-val {
+      min-width: 24px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: #38bdf8;
+    }
+
     .note-inline-input {
       width: 100%;
       background: var(--card);
@@ -387,7 +434,7 @@
       padding-bottom: 8px;
     }
 
-    /* --- FULL SCREEN MULTI-COLUMN KITCHEN GRID (3+ PER ROW) --- */
+    /* FULL SCREEN MULTI-COLUMN KITCHEN GRID */
     .k-tickets {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
@@ -653,18 +700,20 @@
       <!-- Welcome Header Card -->
       <div class="welcome-card">
         <div class="welcome-title" id="portal-welcome-name">Welcome, Mr. XXXXX, (waiter)</div>
-        <div class="welcome-date" id="portal-live-date">Today Date is 11 November, 2026</div>
+        <div class="welcome-date" id="portal-live-date">Today Date is 12 November, 2026</div>
       </div>
 
       <!-- 3 Order Type Buttons -->
       <div class="order-type-grid">
-        <button class="type-btn active" id="btn-type-table" onclick="openSlotPopup('TABLE')">Table Order</button>
+        <button class="type-btn" id="btn-type-table" onclick="openSlotPopup('TABLE')">Table Order</button>
         <button class="type-btn" id="btn-type-takeway" onclick="openSlotPopup('TAKEAWAY')">Take Way</button>
         <button class="type-btn" id="btn-type-bolt" onclick="openSlotPopup('BOLT')">Bolt</button>
       </div>
 
-      <!-- Dynamic Headline: For Table Number: X -->
-      <div class="for-slot-headline" id="headline-selected-slot">For Table Number: 1</div>
+      <!-- Dynamic Headline: No Table Selected Yet (Default) -->
+      <div class="for-slot-headline" id="headline-selected-slot">
+        <span class="headline-warning">⚠️ No Table Selected Yet</span>
+      </div>
 
       <!-- 'I am looking For.....' Search Bar with [?] Button -->
       <div class="search-flex-row">
@@ -672,23 +721,23 @@
         <button class="btn-question-mark" onclick="openQuestionModal()" title="Add Custom Item">?</button>
       </div>
 
-      <!-- Search Autocomplete Dropdown List -->
+      <!-- Search Autocomplete Dropdown List with [-] 0 [+] Stepper -->
       <div class="search-dropdown-list" id="portal-search-results"></div>
 
       <!-- "For this total order is:" Section -->
       <div class="order-basket-section">
         <div class="basket-title">For this total order is:</div>
         <div id="basket-items-container">
-          <p style="color: var(--text-dim); font-size: 0.9rem;">No items added yet. Search food above to add.</p>
+          <p style="color: var(--text-dim); font-size: 0.9rem;">No items added yet. Select a table and search food above.</p>
         </div>
 
-        <button class="btn-transfer" onclick="transferToKitchen()">Transfer to Kitchen</button>
+        <button class="btn-transfer" onclick="transferToKitchen()">Save & Transfer to Kitchen</button>
       </div>
 
       <!-- Live Placed Orders on this Table -->
       <div class="active-placed-card" id="active-placed-order-card">
         <div class="active-placed-title">
-          <strong id="active-slot-placed-headline">Active Kitchen Orders</strong>
+          <strong id="active-slot-placed-headline">Active Orders on Table</strong>
           <small style="color:#f59e0b;">(Cancellation requires reason)</small>
         </div>
         <div id="active-placed-items-list"></div>
@@ -726,18 +775,30 @@
         </table>
       </div>
 
-      <!-- Today's Total Sales & Cooking Duration History -->
+      <!-- KITCHEN COOKING DURATION & PREPARATION LOG (Latest on Top + Calendar Filter) -->
       <div class="manager-card-section">
-        <div class="title" style="margin-bottom:8px; font-weight:800; font-size:1.1rem;">📊 Full Completed Orders History (Date, Time & Duration)</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+          <div>
+            <div class="title" style="font-weight:800; font-size:1.15rem; color:#38bdf8; margin:0;">⏱️ Kitchen Cooking Duration & Prepared Log (Only Kitchen Food)</div>
+            <p style="font-size:0.75rem; color:var(--text-dim); margin-top:2px;">Sorted strictly newest to oldest (Latest completed order stays on top):</p>
+          </div>
+          <!-- CALENDAR FILTER -->
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label style="font-size:0.85rem; color:var(--text); font-weight:700;">Filter by Date:</label>
+            <input type="date" id="mgr-history-datepicker" class="manager-input" style="padding:6px 10px; width:auto;" onchange="filterManagerHistoryByDate()">
+            <button onclick="clearHistoryDateFilter()" style="background:var(--card); border:1px solid var(--border); color:var(--text); padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:700;">Show All</button>
+          </div>
+        </div>
+
         <table class="staff-table">
           <thead>
             <tr style="background:var(--card);">
+              <th>Completed Time</th>
               <th>Date</th>
-              <th>Time</th>
-              <th>Table/Slot</th>
-              <th>Items & Qty</th>
-              <th>Cooked Time (Duration)</th>
-              <th>Staff</th>
+              <th>Table / Slot</th>
+              <th>Kitchen Cooked Food & Qty</th>
+              <th>Exact Cooking Duration</th>
+              <th>Ordered By</th>
             </tr>
           </thead>
           <tbody id="manager-history-tbody"></tbody>
@@ -1048,15 +1109,15 @@
     let globalWaiters = initialWaiters;
     let globalMenu = rawDefaultMenu;
     let globalAuditLogs = [];
-    let globalCompletedHistory = [];
+    let globalKitchenPrepHistory = []; // Kitchen preparation logs (newest on top)
 
     let currentUser = JSON.parse(sessionStorage.getItem('sneda_active_role_user') || 'null');
     let pendingRoleLogin = null;
 
-    // Active order building state
-    let activeOrderType = 'TABLE';
-    let selectedSlotNumber = '1';
+    let activeOrderType = null;
+    let selectedSlotNumber = null;
     let currentDraftBasket = [];
+    let selectedHistoryFilterDate = null;
 
     // Realtime Listeners
     db.ref('active_orders').on('value', snap => {
@@ -1095,8 +1156,9 @@
       if (currentUser && currentUser.role === 'MANAGER') renderManagerPanel();
     });
 
-    db.ref('completed_history').on('value', snap => {
-      globalCompletedHistory = snap.val() || [];
+    // Kitchen Prepared Log Listener (Synchronized instantly when chef presses Prepared)
+    db.ref('kitchen_prep_history').on('value', snap => {
+      globalKitchenPrepHistory = snap.val() || [];
       if (currentUser && currentUser.role === 'MANAGER') renderManagerPanel();
     });
 
@@ -1131,7 +1193,7 @@
       if (mPri) mPri.value = st.accentColor || '#2563eb';
     }
 
-    // Auth Handlers (Loads Custom Position)
+    // Auth Handlers
     function promptRoleLogin(role) {
       pendingRoleLogin = role;
       document.getElementById('modal-role-title').innerText = `${role} Login`;
@@ -1232,7 +1294,6 @@
       if (viewId === 'view-manager') renderManagerPanel();
     }
 
-    // Portal UI Setup (Uses Custom Position & Salutation)
     function setupOrderPortalUI() {
       const posStr = currentUser.position || currentUser.role.toLowerCase();
       const prefix = currentUser.salutation || (currentUser.gender === 'F' ? 'Miss' : 'Mr.');
@@ -1242,15 +1303,15 @@
       const dateStr = new Date().toLocaleDateString('en-GB', options);
       document.getElementById('portal-live-date').innerText = `Today Date is ${dateStr}`;
 
-      activeOrderType = 'TABLE';
-      selectedSlotNumber = '1';
-      document.getElementById('btn-type-table').classList.add('active');
+      activeOrderType = null;
+      selectedSlotNumber = null;
+      document.getElementById('btn-type-table').classList.remove('active');
       document.getElementById('btn-type-takeway').classList.remove('active');
       document.getElementById('btn-type-bolt').classList.remove('active');
       updateHeadlineText();
+      renderActivePlacedOrders();
     }
 
-    // POPUP MODAL LOGIC FOR TABLE / TAKEAWAY / BOLT
     function openSlotPopup(type) {
       activeOrderType = type;
       document.getElementById('btn-type-table').classList.toggle('active', type === 'TABLE');
@@ -1268,10 +1329,10 @@
         title.innerText = 'Select Table Number (1 - 22)';
         for (let i = 1; i <= 22; i++) {
           const key = `T-${i}`;
-          const isOcc = dbOrders[key] && dbOrders[key].some(t => t.status === 'pending');
-          const isSel = (selectedSlotNumber == i);
+          const isBlocked = dbOrders[key] && dbOrders[key].length > 0;
+          const isSel = (selectedSlotNumber == i && activeOrderType === 'TABLE');
           container.innerHTML += `
-            <div class="popup-slot-btn ${isSel ? 'active' : ''} ${isOcc ? 'occupied' : ''}" onclick="confirmSlotChoice('${i}')">
+            <div class="popup-slot-btn ${isSel ? 'active' : ''} ${isBlocked ? 'occupied' : ''}" onclick="confirmSlotChoice('${i}')">
               ${i}
             </div>
           `;
@@ -1280,10 +1341,10 @@
         title.innerText = 'Select Take Way Number (1 - 10)';
         for (let i = 1; i <= 10; i++) {
           const key = `TA-${i}`;
-          const isOcc = dbOrders[key] && dbOrders[key].some(t => t.status === 'pending');
-          const isSel = (selectedSlotNumber == i);
+          const isBlocked = dbOrders[key] && dbOrders[key].length > 0;
+          const isSel = (selectedSlotNumber == i && activeOrderType === 'TAKEAWAY');
           container.innerHTML += `
-            <div class="popup-slot-btn ${isSel ? 'active' : ''} ${isOcc ? 'occupied' : ''}" onclick="confirmSlotChoice('${i}')">
+            <div class="popup-slot-btn ${isSel ? 'active' : ''} ${isBlocked ? 'occupied' : ''}" onclick="confirmSlotChoice('${i}')">
               ${i}
             </div>
           `;
@@ -1292,10 +1353,10 @@
         title.innerText = 'Select Bolt Number (1 - 10)';
         for (let i = 1; i <= 10; i++) {
           const key = `Bolt-${i}`;
-          const isOcc = dbOrders[key] && dbOrders[key].some(t => t.status === 'pending');
-          const isSel = (selectedSlotNumber == i);
+          const isBlocked = dbOrders[key] && dbOrders[key].length > 0;
+          const isSel = (selectedSlotNumber == i && activeOrderType === 'BOLT');
           container.innerHTML += `
-            <div class="popup-slot-btn ${isSel ? 'active' : ''} ${isOcc ? 'occupied' : ''}" onclick="confirmSlotChoice('${i}')">
+            <div class="popup-slot-btn ${isSel ? 'active' : ''} ${isBlocked ? 'occupied' : ''}" onclick="confirmSlotChoice('${i}')">
               ${i}
             </div>
           `;
@@ -1318,6 +1379,10 @@
 
     function updateHeadlineText() {
       const h = document.getElementById('headline-selected-slot');
+      if (!activeOrderType || !selectedSlotNumber) {
+        h.innerHTML = `<span class="headline-warning">⚠️ No Table Selected Yet</span>`;
+        return;
+      }
       if (activeOrderType === 'TABLE') {
         h.innerText = `For Table Number: ${selectedSlotNumber}`;
       } else if (activeOrderType === 'TAKEAWAY') {
@@ -1328,9 +1393,15 @@
     }
 
     function getFullSlotKey() {
+      if (!activeOrderType || !selectedSlotNumber) return null;
       if (activeOrderType === 'TABLE') return `T-${selectedSlotNumber}`;
       if (activeOrderType === 'TAKEAWAY') return `TA-${selectedSlotNumber}`;
       return `Bolt-${selectedSlotNumber}`;
+    }
+
+    function getItemQtyInDraft(name) {
+      const found = currentDraftBasket.find(i => i.name === name);
+      return found ? found.qty : 0;
     }
 
     function handleSearchType() {
@@ -1356,29 +1427,45 @@
           ? '<span style="background:#854d0e; color:#fef08a; padding:2px 6px; border-radius:4px; font-size:0.7rem;">Kitchen</span>' 
           : '<span style="background:#334155; color:#94a3b8; padding:2px 6px; border-radius:4px; font-size:0.7rem;">Direct</span>';
 
+        const safeId = item.name.replace(/[^a-zA-Z0-9]/g, '_');
+        const currentQty = getItemQtyInDraft(item.name);
+
         drop.innerHTML += `
           <div class="search-res-item">
             <div class="search-res-top">
               <div>
                 <strong>${item.name}</strong> ${catBadge}
               </div>
-              <button onclick="addItemToDraftBasket('${item.name}', ${item.isKitchen})" style="background:var(--primary); color:white; border:none; padding:5px 12px; border-radius:6px; font-weight:700; cursor:pointer;">+ Add</button>
+              <div class="stepper-box">
+                <button class="btn-stepper" onclick="updateItemStepper('${item.name}', ${item.isKitchen}, -1)">-</button>
+                <span class="stepper-val" id="stepper-val-${safeId}">${currentQty}</span>
+                <button class="btn-stepper" onclick="updateItemStepper('${item.name}', ${item.isKitchen}, 1)">+</button>
+              </div>
             </div>
-            <input type="text" id="note-for-${item.name.replace(/\s+/g, '-')}" class="note-inline-input" placeholder="✏️ Cooking Note: e.g. Extra spicy, less oil...">
+            <input type="text" id="note-for-${safeId}" class="note-inline-input" placeholder="✏️ Cooking Note: e.g. Extra spicy, less oil..." oninput="updateItemNoteFromSearch('${item.name}', this.value)">
           </div>
         `;
       });
       drop.style.display = 'block';
     }
 
-    function addItemToDraftBasket(name, isKitchen) {
-      const noteInput = document.getElementById(`note-for-${name.replace(/\s+/g, '-')}`);
+    function updateItemStepper(name, isKitchen, delta) {
+      if (!activeOrderType || !selectedSlotNumber) {
+        return alert('Please select a Table, Take Away, or Bolt slot first!');
+      }
+
+      const safeId = name.replace(/[^a-zA-Z0-9]/g, '_');
+      const noteInput = document.getElementById(`note-for-${safeId}`);
       const note = noteInput ? noteInput.value.trim() : '';
 
-      const exist = currentDraftBasket.find(i => i.name === name && i.note === note);
-      if (exist) {
-        exist.qty += 1;
-      } else {
+      let itemIndex = currentDraftBasket.findIndex(i => i.name === name);
+
+      if (itemIndex > -1) {
+        currentDraftBasket[itemIndex].qty += delta;
+        if (currentDraftBasket[itemIndex].qty <= 0) {
+          currentDraftBasket.splice(itemIndex, 1);
+        }
+      } else if (delta > 0) {
         currentDraftBasket.push({
           name: name,
           qty: 1,
@@ -1387,15 +1474,25 @@
         });
       }
 
-      document.getElementById('portal-search-bar').value = '';
-      document.getElementById('portal-search-results').style.display = 'none';
+      const newQty = getItemQtyInDraft(name);
+      const valEl = document.getElementById(`stepper-val-${safeId}`);
+      if (valEl) valEl.innerText = newQty;
+
       renderDraftBasket();
+    }
+
+    function updateItemNoteFromSearch(name, noteVal) {
+      let item = currentDraftBasket.find(i => i.name === name);
+      if (item) {
+        item.note = noteVal.trim();
+        renderDraftBasket();
+      }
     }
 
     function renderDraftBasket() {
       const wrap = document.getElementById('basket-items-container');
       if (currentDraftBasket.length === 0) {
-        wrap.innerHTML = '<p style="color: var(--text-dim); font-size: 0.9rem;">No items added yet. Search food above to add.</p>';
+        wrap.innerHTML = '<p style="color: var(--text-dim); font-size: 0.9rem;">No items added yet. Select a table and search food above.</p>';
         return;
       }
 
@@ -1418,11 +1515,20 @@
     }
 
     function removeDraftItem(index) {
+      const item = currentDraftBasket[index];
+      if (item) {
+        const safeId = item.name.replace(/[^a-zA-Z0-9]/g, '_');
+        const valEl = document.getElementById(`stepper-val-${safeId}`);
+        if (valEl) valEl.innerText = '0';
+      }
       currentDraftBasket.splice(index, 1);
       renderDraftBasket();
     }
 
     function openQuestionModal() {
+      if (!activeOrderType || !selectedSlotNumber) {
+        return alert('Please select a Table, Take Away, or Bolt slot first!');
+      }
       document.getElementById('qm-item-name').value = '';
       document.getElementById('qm-item-qty').value = '1';
       document.getElementById('question-modal').style.display = 'flex';
@@ -1452,22 +1558,31 @@
 
     // Transfer to Kitchen
     function transferToKitchen() {
+      const slotKey = getFullSlotKey();
+      if (!slotKey) {
+        return alert('⚠️ Please select a Table, Take Away, or Bolt slot before transferring order!');
+      }
+
       if (currentDraftBasket.length === 0) {
         return alert('Please add at least 1 item to the order before transferring!');
       }
 
-      const slotKey = getFullSlotKey();
       const dbOrders = { ...globalActiveOrders };
       if (!dbOrders[slotKey]) dbOrders[slotKey] = [];
 
       const now = new Date();
       const pos = currentUser.position || currentUser.role;
+
+      // Extract raw ISO date for easy sorting/filtering: YYYY-MM-DD
+      const dateIso = now.toISOString().split('T')[0];
+
       dbOrders[slotKey].push({
         id: Date.now(),
         startTime: Date.now(),
         orderType: activeOrderType,
         slotNumber: selectedSlotNumber,
         slotKey: slotKey,
+        dateIso: dateIso,
         date: now.toLocaleDateString('en-GB'),
         time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         waiter: `${currentUser.name} (${pos})`,
@@ -1478,6 +1593,8 @@
 
       db.ref('active_orders').set(dbOrders);
       currentDraftBasket = [];
+      document.getElementById('portal-search-bar').value = '';
+      document.getElementById('portal-search-results').style.display = 'none';
       renderDraftBasket();
       alert(`Order successfully transferred to Kitchen for ${slotKey}!`);
     }
@@ -1486,9 +1603,14 @@
       const card = document.getElementById('active-placed-order-card');
       const listWrap = document.getElementById('active-placed-items-list');
       const slotKey = getFullSlotKey();
-      const tickets = globalActiveOrders[slotKey] || [];
 
-      document.getElementById('active-slot-placed-headline').innerText = `Active Placed Orders on ${slotKey}`;
+      if (!slotKey) {
+        card.style.display = 'none';
+        return;
+      }
+
+      const tickets = globalActiveOrders[slotKey] || [];
+      document.getElementById('active-slot-placed-headline').innerText = `Active Orders on ${slotKey}`;
 
       if (tickets.length === 0) {
         card.style.display = 'none';
@@ -1501,10 +1623,14 @@
       tickets.forEach(ticket => {
         ticket.items.forEach(it => {
           const noteStr = it.note ? ` <small style="color:#f59e0b;">(${it.note})</small>` : '';
+          const statusBadge = ticket.status === 'done' 
+            ? `<span style="background:#16a34a; color:#fff; font-size:0.7rem; padding:1px 5px; border-radius:3px; margin-left:4px;">Prepared</span>`
+            : `<span style="background:#d97706; color:#fff; font-size:0.7rem; padding:1px 5px; border-radius:3px; margin-left:4px;">Cooking</span>`;
+
           listWrap.innerHTML += `
             <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dashed var(--border);">
               <div>
-                <strong>${it.name}</strong> x${it.qty} ${noteStr}
+                <strong>${it.name}</strong> x${it.qty} ${statusBadge} ${noteStr}
                 <div style="font-size:0.75rem; color:var(--text-dim);">Punched at ${ticket.time} by ${ticket.waiter}</div>
               </div>
               <button onclick="requestCancelPlacedItem('${slotKey}', ${ticket.id}, '${it.name}', ${it.qty})" 
@@ -1556,39 +1682,19 @@
 
     function clearActiveSlotBill() {
       const slotKey = getFullSlotKey();
+      if (!slotKey) return alert('Select a table first.');
+
       const dbOrders = { ...globalActiveOrders };
       if (!dbOrders[slotKey] || dbOrders[slotKey].length === 0) return alert('No orders to finalize.');
 
       if (confirm(`Finalize payment and complete all orders for ${slotKey}?`)) {
-        const history = Array.isArray(globalCompletedHistory) ? [...globalCompletedHistory] : [];
-        const now = new Date();
-
-        dbOrders[slotKey].forEach(ticket => {
-          const start = Number(ticket.startTime) || ticket.id || Date.now();
-          const elapsedSec = ticket.readyDuration || Math.floor((Date.now() - start) / 1000);
-          const mins = Math.floor(elapsedSec / 60);
-          const secs = elapsedSec % 60;
-          const durationStr = `${mins}m ${secs}s`;
-
-          history.unshift({
-            date: ticket.date || now.toLocaleDateString('en-GB'),
-            time: ticket.time || now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            slot: slotKey,
-            items: ticket.items.map(i => `${i.name} (x${i.qty})`).join(', '),
-            duration: durationStr,
-            staff: ticket.waiter,
-            staffId: ticket.staffId || ''
-          });
-        });
-
-        db.ref('completed_history').set(history);
         delete dbOrders[slotKey];
         db.ref('active_orders').set(dbOrders);
-        alert(`Bill cleared for ${slotKey}! Record saved to Manager History.`);
+        alert(`Bill cleared for ${slotKey}! Table is now completely empty.`);
       }
     }
 
-    // --- CONSOLIDATED KITCHEN VIEW (With Clean Numerals: TABLE ORDER (16), TAKE WAY (1), BOLT ORDER (2)) ---
+    // --- CONSOLIDATED KITCHEN VIEW (Clean Numerals: TABLE ORDER (16), TAKE WAY (1), BOLT ORDER (2)) ---
     function renderKitchenDisplay() {
       const wrap = document.getElementById('kitchen-ticket-list');
       if (!wrap) return;
@@ -1627,7 +1733,6 @@
         if (allKitchenItems.length > 0) {
           count++;
 
-          // Clean Number Formatting: TABLE ORDER (16), TAKE WAY (1), BOLT ORDER (2)
           let headlineTitle = '';
           let cardClass = '';
           if (slotKey.startsWith('T-')) {
@@ -1711,13 +1816,32 @@
       }
     }, 1000);
 
+    // KITCHEN FINISH ACTION: IMMEDIATELY LOGS TO MANAGER'S TIMING HISTORY (NEWEST ON TOP)
     function markAllKitchenPreparedForSlot(slotKey) {
       const dbOrders = { ...globalActiveOrders };
       if (dbOrders[slotKey]) {
         const now = Date.now();
+        const finishDateObj = new Date();
+        const dateIso = finishDateObj.toISOString().split('T')[0];
+        const dateStr = finishDateObj.toLocaleDateString('en-GB');
+        const timeStr = finishDateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        // Identify all pending kitchen cooked items being prepared right now
+        let preparedKitchenItems = [];
+        let earliestStart = Infinity;
+        let waitersSet = new Set();
+
         dbOrders[slotKey] = dbOrders[slotKey].map(t => {
           if (t.status === 'pending') {
             const start = Number(t.startTime) || Number(t.id) || now;
+            if (start < earliestStart) earliestStart = start;
+            if (t.waiter) waitersSet.add(t.waiter);
+
+            const cooked = (t.items || []).filter(i => i.isKitchen !== false);
+            cooked.forEach(it => {
+              preparedKitchenItems.push(`${it.name} (x${it.qty})`);
+            });
+
             return {
               ...t,
               status: 'done',
@@ -1726,19 +1850,57 @@
           }
           return t;
         });
+
+        // If kitchen food was finished, push to Manager's Kitchen Prep History
+        if (preparedKitchenItems.length > 0) {
+          const totalDurationSec = Math.max(1, Math.floor((now - (earliestStart === Infinity ? now : earliestStart)) / 1000));
+          const mins = Math.floor(totalDurationSec / 60);
+          const secs = totalDurationSec % 60;
+          const durationFormatted = `${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
+
+          const history = Array.isArray(globalKitchenPrepHistory) ? [...globalKitchenPrepHistory] : [];
+          // Prepend so latest completed order is strictly on TOP (#1)
+          history.unshift({
+            timestamp: now,
+            dateIso: dateIso,
+            date: dateStr,
+            time: timeStr,
+            slot: slotKey,
+            items: preparedKitchenItems.join(', '),
+            duration: durationFormatted,
+            staff: Array.from(waitersSet).join(', ')
+          });
+
+          db.ref('kitchen_prep_history').set(history);
+        }
+
         db.ref('active_orders').set(dbOrders);
       }
     }
 
-    // MANAGER PANEL RENDERING & LEADERBOARD (Position Aware)
+    // MANAGER CALENDAR FILTER CONTROLS
+    function filterManagerHistoryByDate() {
+      const picker = document.getElementById('mgr-history-datepicker');
+      selectedHistoryFilterDate = picker.value || null;
+      renderManagerPanel();
+    }
+
+    function clearHistoryDateFilter() {
+      selectedHistoryFilterDate = null;
+      const picker = document.getElementById('mgr-history-datepicker');
+      if (picker) picker.value = '';
+      renderManagerPanel();
+    }
+
+    // MANAGER PANEL RENDERING & LEADERBOARD (Position Aware & Strictly Sorted)
     function renderManagerPanel() {
-      // 1. Staff Leaderboard (Order Count Analytics)
+      // 1. Staff Leaderboard
       const lBody = document.getElementById('manager-leaderboard-tbody');
       if (lBody) {
         lBody.innerHTML = '';
         const orderCounts = {};
 
-        globalCompletedHistory.forEach(h => {
+        globalKitchenPrepHistory.forEach(h => {
           if (h.staff) {
             orderCounts[h.staff] = (orderCounts[h.staff] || 0) + 1;
           }
@@ -1775,7 +1937,45 @@
         }
       }
 
-      // 2. Staff Accounts Table with Custom Positions and Full Edit Button
+      // 2. Kitchen Cooking History Table (Strictly Newest on Top + Calendar Filtered)
+      const hBody = document.getElementById('manager-history-tbody');
+      if (hBody) {
+        hBody.innerHTML = '';
+        let list = [...globalKitchenPrepHistory];
+
+        // Sort descending by timestamp so latest finished order is on TOP
+        list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+        // Filter by chosen Calendar date if selected
+        if (selectedHistoryFilterDate) {
+          list = list.filter(item => item.dateIso === selectedHistoryFilterDate);
+        }
+
+        if (list.length === 0) {
+          const filterMsg = selectedHistoryFilterDate ? `for selected date (${selectedHistoryFilterDate})` : 'yet';
+          hBody.innerHTML = `<tr><td colspan="6" style="color:var(--text-dim); padding:14px;">No finished kitchen cooking records found ${filterMsg}.</td></tr>`;
+        } else {
+          list.forEach((h, idx) => {
+            // First item (just finished) gets a high-visibility badge
+            const isLatest = idx === 0 && !selectedHistoryFilterDate;
+            const rowStyle = isLatest ? 'background: rgba(16, 185, 129, 0.12); border-left: 4px solid #10b981;' : '';
+            const latestBadge = isLatest ? '<span style="background:#10b981; color:white; font-size:0.7rem; padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:800;">JUST COMPLETED</span>' : '';
+
+            hBody.innerHTML += `
+              <tr style="${rowStyle}">
+                <td style="font-weight:700; color:#38bdf8;">${h.time} ${latestBadge}</td>
+                <td>${h.date}</td>
+                <td><strong>${h.slot}</strong></td>
+                <td style="text-align:left; padding-left:14px;">${h.items}</td>
+                <td><span style="color:#fbbf24; font-weight:800; font-size:1.05rem;">⏱️ ${h.duration}</span></td>
+                <td><small style="color:var(--text-dim);">${h.staff}</small></td>
+              </tr>
+            `;
+          });
+        }
+      }
+
+      // 3. Staff Accounts Table
       const tbody = document.getElementById('manager-staff-tbody');
       if (tbody) {
         tbody.innerHTML = '';
@@ -1837,29 +2037,6 @@
             </tr>
           `;
         });
-      }
-
-      // 3. History Table with Duration
-      const hBody = document.getElementById('manager-history-tbody');
-      if (hBody) {
-        hBody.innerHTML = '';
-        const list = globalCompletedHistory;
-        if (list.length === 0) {
-          hBody.innerHTML = '<tr><td colspan="6" style="color:var(--text-dim);">No completed orders yet.</td></tr>';
-        } else {
-          list.forEach(h => {
-            hBody.innerHTML += `
-              <tr>
-                <td>${h.date}</td>
-                <td>${h.time}</td>
-                <td><strong>${h.slot}</strong></td>
-                <td>${h.items}</td>
-                <td><span style="color:#10b981; font-weight:700;">${h.duration}</span></td>
-                <td><small>${h.staff}</small></td>
-              </tr>
-            `;
-          });
-        }
       }
 
       // 4. Audit Logs Table
@@ -1963,7 +2140,6 @@
 
       if (!name || !pass) return alert('Name and Password cannot be empty!');
 
-      // Remove from both lists first to support moving roles
       let cashiers = globalCashiers.filter(x => x.id !== id);
       let waiters = globalWaiters.filter(x => x.id !== id);
 
